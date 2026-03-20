@@ -58,9 +58,6 @@
     }
 
     .logo {
-      font-size: 48px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
       padding: 0 40px;
       display: flex;
       align-items: center;
@@ -789,7 +786,7 @@
 <body>
   <!-- HEADER -->
   <header>
-    <div class="logo" onclick="goHome()">Fontssss view</div>
+    <div class="logo" onclick="goHome()"><canvas id="logoCanvas" style="display:block;"></canvas></div>
     <nav class="nav-tabs">
       <button class="nav-tab active" data-tab="all" onclick="switchTab('all')">
         <span class="tab-label">All Fonts</span>
@@ -1802,8 +1799,184 @@
       render();
     });
 
+    // ---- Logo with SVG-edit node effect ----
+    let _logoAnchors = []; // cached anchors for hover animation
+    let _logoEdges = [];
+
+    function drawLogoNodes(hoverT) {
+      hoverT = hoverT || 0; // 0 = static, 1 = fully hovered
+      const canvas = document.getElementById('logoCanvas');
+      if (!canvas) return;
+      const dpr = window.devicePixelRatio || 1;
+      const isDark = document.body.classList.contains('dark');
+      const textColor = isDark ? '#f0f0eb' : '#1a1a1a';
+      const handleLineColor = isDark ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.15)';
+      const nodeStroke = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.3)';
+      const nodeFill = isDark ? '#1a1a1a' : '#ffffff';
+      const handleDotColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.25)';
+
+      const targetFontSize = 48;
+      const text = 'Fontssss view';
+      const ctx = canvas.getContext('2d');
+
+      // Measure
+      ctx.font = `700 ${targetFontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+      const tm = ctx.measureText(text);
+      const W = Math.ceil(tm.width) + 8;
+      const H = targetFontSize + 16;
+
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, W, H);
+
+      // Draw text
+      ctx.font = `700 ${targetFontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+      ctx.fillStyle = textColor;
+      ctx.textBaseline = 'top';
+      ctx.fillText(text, 2, 6);
+
+      // Compute anchors only once (cache)
+      if (_logoAnchors.length === 0) {
+        const offscreen = document.createElement('canvas');
+        offscreen.width = W;
+        offscreen.height = H;
+        const octx = offscreen.getContext('2d');
+        octx.font = ctx.font;
+        octx.textBaseline = 'top';
+        octx.fillStyle = '#000';
+        octx.fillText(text, 2, 6);
+        const imgData = octx.getImageData(0, 0, W, H).data;
+
+        const edges = [];
+        const step = 2;
+        for (let y = 1; y < H - 1; y += step) {
+          for (let x = 1; x < W - 1; x += step) {
+            const a = imgData[(y * W + x) * 4 + 3];
+            if (a < 60) continue;
+            const neighbors = [
+              imgData[((y-1) * W + x) * 4 + 3],
+              imgData[((y+1) * W + x) * 4 + 3],
+              imgData[(y * W + x-1) * 4 + 3],
+              imgData[(y * W + x+1) * 4 + 3],
+            ];
+            if (neighbors.some(n => n < 30)) {
+              edges.push({ x, y });
+            }
+          }
+        }
+
+        const spacing = 14;
+        for (const p of edges) {
+          if (!_logoAnchors.some(a => (a.x-p.x)**2 + (a.y-p.y)**2 < spacing*spacing)) {
+            _logoAnchors.push(p);
+          }
+        }
+
+        // Pre-compute handle data with seeded random
+        let seed = 42;
+        function srand() { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; }
+        for (const n of _logoAnchors) {
+          n.hasHandle = srand() < 0.35;
+          const cx = W / 2, cy = H / 2;
+          n.angle = Math.atan2(n.y - cy, n.x - cx) + (srand() - 0.5) * 1.2;
+          n.len1 = 10 + srand() * 14;
+          n.hasSecond = srand() > 0.3;
+          n.len2ratio = 0.4 + srand() * 0.4;
+        }
+      }
+
+      const anchors = _logoAnchors;
+
+      // Handle extension multiplier: grows on hover
+      const ext = 1 + hoverT * 0.5;
+      const handleAlpha = 1 + hoverT * 0.6;
+
+      // Draw handles
+      ctx.lineWidth = 0.8;
+      for (const n of anchors) {
+        if (!n.hasHandle) continue;
+        const len1 = n.len1 * ext;
+        const hx1 = n.x + Math.cos(n.angle) * len1;
+        const hy1 = n.y + Math.sin(n.angle) * len1;
+
+        ctx.strokeStyle = handleLineColor;
+        ctx.globalAlpha = Math.min(handleAlpha, 1);
+        ctx.beginPath();
+        ctx.moveTo(n.x, n.y);
+        ctx.lineTo(hx1, hy1);
+        ctx.stroke();
+
+        ctx.fillStyle = handleDotColor;
+        ctx.beginPath();
+        ctx.arc(hx1, hy1, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (n.hasSecond) {
+          const len2 = n.len1 * n.len2ratio * ext;
+          const hx2 = n.x - Math.cos(n.angle) * len2;
+          const hy2 = n.y - Math.sin(n.angle) * len2;
+          ctx.strokeStyle = handleLineColor;
+          ctx.beginPath();
+          ctx.moveTo(n.x, n.y);
+          ctx.lineTo(hx2, hy2);
+          ctx.stroke();
+          ctx.fillStyle = handleDotColor;
+          ctx.beginPath();
+          ctx.arc(hx2, hy2, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      // Draw anchor nodes
+      const sz = 2.5;
+      for (const n of anchors) {
+        ctx.fillStyle = nodeFill;
+        ctx.fillRect(n.x - sz, n.y - sz, sz * 2, sz * 2);
+        ctx.strokeStyle = nodeStroke;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(n.x - sz, n.y - sz, sz * 2, sz * 2);
+      }
+    }
+
+    // Redraw logo on theme change
+    const origSetTheme = setTheme;
+    setTheme = function(theme) {
+      origSetTheme(theme);
+      drawLogoNodes();
+    };
+
+    // Hover interaction: animate handles on mouse enter/leave
+    let logoHovered = false;
+    let logoAnimFrame = null;
+    let logoHoverT = 0;
+    const logoEl = document.querySelector('.logo');
+
+    function animateLogoHover() {
+      if (!logoHovered && logoHoverT <= 0) { logoAnimFrame = null; return; }
+      if (logoHovered && logoHoverT >= 1) { logoAnimFrame = null; return; }
+      logoHoverT += logoHovered ? 0.08 : -0.06;
+      logoHoverT = Math.max(0, Math.min(1, logoHoverT));
+      drawLogoNodes(logoHoverT);
+      logoAnimFrame = requestAnimationFrame(animateLogoHover);
+    }
+
+    logoEl.addEventListener('mouseenter', () => {
+      logoHovered = true;
+      if (!logoAnimFrame) animateLogoHover();
+    });
+    logoEl.addEventListener('mouseleave', () => {
+      logoHovered = false;
+      if (!logoAnimFrame) animateLogoHover();
+    });
+
     // ---- Init ----
     loadFonts();
+    // Draw logo after a tick so fonts are ready
+    requestAnimationFrame(drawLogoNodes);
   </script>
 </body>
 </html>
