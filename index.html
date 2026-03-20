@@ -127,12 +127,15 @@
     .toolbar {
       border-bottom: 1px solid var(--border);
       background: var(--bg);
+      position: sticky;
+      top: 150px;
+      z-index: 90;
     }
 
     .toolbar-row {
       display: flex;
       align-items: center;
-      padding: 0 32px;
+      padding: 0 40px;
       min-height: 96px;
       border-bottom: 1px solid var(--border);
     }
@@ -605,14 +608,14 @@
     .glyph-block-title {
       font-size: 14px;
       font-weight: 600;
-      padding: 20px 24px 12px;
+      padding: 20px 40px 12px;
       color: var(--text-secondary);
     }
 
     .glyph-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
-      padding: 0 24px 24px;
+      padding: 0 40px 24px;
     }
 
     .glyph-cell {
@@ -1573,7 +1576,7 @@
         ctx.globalAlpha = 0.8;
         ctx.fillStyle = labelGray;
         ctx.textAlign = 'left';
-        ctx.fillText(m.name, 8, m.y);
+        ctx.fillText(m.name, 0, m.y);
       }
       ctx.textBaseline = 'alphabetic';
       ctx.globalAlpha = 1;
