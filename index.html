@@ -65,6 +65,12 @@
       cursor: default;
     }
 
+    .header-spacer {
+      flex: 1;
+      min-width: 40px;
+      cursor: pointer;
+    }
+
     .logo svg {
       display: block;
     }
@@ -570,7 +576,7 @@
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 6px 12px;
-      background: var(--card-bg);
+      background: transparent;
       font-family: inherit;
       cursor: pointer;
       outline: none;
@@ -821,6 +827,7 @@
   <!-- HEADER -->
   <header>
     <div class="logo"><svg id="logoSvg" aria-label="Fontssss view"></svg></div>
+    <div class="header-spacer" id="headerSpacer" title="返回主页"></div>
     <nav class="nav-tabs">
       <button class="nav-tab active" data-tab="all" onclick="switchTab('all')">
         <span class="tab-label">All Fonts</span>
@@ -834,6 +841,7 @@
         <span class="tab-label">♥ 收藏</span>
         <span class="tab-count" id="navFavCount">0</span>
       </button>
+      <button class="nav-tab" id="addFolderBtn" onclick="addFontFolder()" title="添加本地字体文件夹" style="min-width:60px;font-size:20px;font-weight:300;color:var(--text-secondary)">+</button>
     </nav>
   </header>
 
@@ -1849,6 +1857,9 @@
 
           // Cache the ArrayBuffer for opentype.js glyph parsing
           if (!fontBlobCache.has(family)) fontBlobCache.set(family, buf.slice(0));
+          // Also cache per style for style switching
+          const styleName = file.name.replace(/\.[^.]+$/, '');
+          fontBlobCache.set(family + '::' + styleName, buf.slice(0));
 
           if (!familyMap.has(family)) familyMap.set(family, { family, styles: [] });
           familyMap.get(family).styles.push(file.name);
@@ -1880,6 +1891,69 @@
         }
         await loadFromFiles(files);
       } catch (e) { /* cancelled */ }
+    }
+
+    async function addFontFolder() {
+      try {
+        const dirHandle = await window.showDirectoryPicker();
+        const files = [];
+        for await (const entry of dirHandle.values()) {
+          if (entry.kind === 'file') files.push(await entry.getFile());
+        }
+        for await (const entry of dirHandle.values()) {
+          if (entry.kind === 'directory') {
+            try { for await (const sub of entry.values()) { if (sub.kind === 'file') files.push(await sub.getFile()); } } catch(e) {}
+          }
+        }
+        await mergeFromFiles(files);
+      } catch (e) { /* cancelled */ }
+    }
+
+    async function mergeFromFiles(files) {
+      const validExts = ['.ttf', '.otf', '.woff', '.woff2', '.ttc'];
+      const existingFamilies = new Map(allFonts.map(f => [f.family, f]));
+      let added = 0;
+
+      for (const file of files) {
+        const name = file.name.toLowerCase();
+        if (!validExts.some(ext => name.endsWith(ext))) continue;
+        try {
+          const buf = await file.arrayBuffer();
+          let family = file.name.replace(/\.[^.]+$/, '')
+            .replace(/[-_](Regular|Bold|Italic|Light|Medium|Thin|Black|SemiBold|ExtraBold|ExtraLight|Heavy|Condensed|Expanded|Oblique|Book|Demi|Ultra)/gi, '')
+            .replace(/[-_]/g, ' ').trim();
+          if (!family) family = file.name.replace(/\.[^.]+$/, '');
+
+          const fontFace = new FontFace(family, buf);
+          await fontFace.load();
+          document.fonts.add(fontFace);
+
+          if (!fontBlobCache.has(family)) fontBlobCache.set(family, buf.slice(0));
+
+          if (existingFamilies.has(family)) {
+            const existing = existingFamilies.get(family);
+            if (!existing.styles.includes(file.name)) {
+              existing.styles.push(file.name);
+              existing.styleCount = existing.styles.length;
+            }
+          } else {
+            const newFont = {
+              family,
+              styles: [file.name],
+              category: classifyFont(family),
+              styleCount: 1
+            };
+            allFonts.push(newFont);
+            existingFamilies.set(family, newFont);
+            added++;
+          }
+        } catch (e) { /* skip */ }
+      }
+
+      allFonts.sort((a, b) => a.family.localeCompare(b.family));
+      render();
+      if (added > 0) showToast(`已添加 ${added} 个字体`);
+      else showToast('未发现新字体');
     }
 
     async function loadFonts() {
@@ -2272,6 +2346,11 @@
       if (logoPathData) logoSpringFrame = requestAnimationFrame(springBackLogo);
     });
     logoSvg.addEventListener('pointerdown', onLogoPointerDown);
+
+    // Header spacer click → return to main page when in glyph view
+    document.getElementById('headerSpacer').addEventListener('click', () => {
+      goHome();
+    });
 
     const origSetTheme = setTheme;
     setTheme = function(theme) { origSetTheme(theme); if (logoSvgReady) renderLogoSvg(); };
