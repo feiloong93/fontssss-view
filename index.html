@@ -145,16 +145,15 @@
     }
 
     .toolbar-row-collapsible {
-      overflow: hidden;
-      transition: min-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+      max-height: 96px;
+      transition: max-height 0.25s ease, opacity 0.25s ease;
     }
 
     .toolbar-row-collapsible.collapsed {
-      min-height: 0;
-      height: 0;
-      padding-top: 0;
-      padding-bottom: 0;
+      max-height: 0;
       opacity: 0;
+      overflow: hidden;
+      min-height: 0;
       border-bottom: none;
     }
 
@@ -443,7 +442,7 @@
     .card {
       border-right: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
-      padding: 32px;
+      padding: 32px 40px;
       cursor: pointer;
       transition: background 0.2s;
       animation: fadeUp 0.4s ease both;
@@ -1869,18 +1868,17 @@
 
     // ---- Events ----
 
-    // Collapse first toolbar row on scroll
-    let lastScrollY = 0;
+    // Collapse first toolbar row on scroll (delayed to avoid first-load jank)
     const toolbarRow1 = document.getElementById('toolbarRow1');
-    window.addEventListener('scroll', () => {
-      const y = window.scrollY;
-      if (y > 60) {
-        toolbarRow1.classList.add('collapsed');
-      } else {
-        toolbarRow1.classList.remove('collapsed');
-      }
-      lastScrollY = y;
-    }, { passive: true });
+    setTimeout(() => {
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 60) {
+          toolbarRow1.classList.add('collapsed');
+        } else {
+          toolbarRow1.classList.remove('collapsed');
+        }
+      }, { passive: true });
+    }, 500);
 
     document.getElementById('searchToggle').addEventListener('click', () => {
       const box = document.getElementById('searchBox');
