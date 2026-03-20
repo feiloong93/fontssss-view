@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fontssss View — Local Font Preview</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #f5f5f0;
+      --card-bg: #ffffff;
+      --text: #1a1a1a;
+      --text-secondary: #888;
+      --accent: #ff3366;
+      --border: #e5e5e0;
+      --hover-bg: #fafaf8;
+      --nav-active-bg: #1a1a1a;
+      --nav-active-text: #f5f5f0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.dark {
+      --bg: #1a1a1a;
+      --card-bg: #252525;
+      --text: #f0f0eb;
+      --text-secondary: #888;
+      --border: #333;
+      --hover-bg: #2a2a2a;
+      --nav-active-bg: #f0f0eb;
+      --nav-active-text: #1a1a1a;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      display: flex;
+      align-items: stretch;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: 150px;
+    }
+
+    .logo {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      cursor: default;
+    }
+
+    .logo sup {
+      font-size: 11px;
+      vertical-align: super;
+      margin-left: 1px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      align-items: stretch;
+      margin-left: auto;
+    }
+
+    .nav-tab {
+      padding: 0 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-left: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 15px;
+      transition: background 0.35s ease, color 0.35s ease;
+      min-width: 140px;
+      background: transparent;
+      color: var(--text);
+      text-decoration: none;
+      border-top: none;
+      border-bottom: none;
+      border-right: none;
+      font-family: inherit;
+      position: relative;
+    }
+
+    .nav-tab:hover {
+      background: var(--hover-bg);
+    }
+
+    .nav-tab.active {
+      background: var(--nav-active-bg);
+      color: var(--nav-active-text);
+    }
+
+    .nav-tab .tab-label { font-weight: 500; }
+    .nav-tab .tab-count {
+      font-size: 12px;
+      margin-top: 6px;
+      opacity: 0.6;
+      min-height: 16px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      border-left: 1px solid var(--border);
+      padding: 0 24px;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* ===== TOOLBAR ===== */
+    .toolbar {
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .toolbar-row {
+      display: flex;
+      align-items: center;
+      padding: 0 32px;
+      min-height: 48px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .toolbar-row:last-child {
+      border-bottom: none;
+    }
+
+    .tool-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: color 0.2s;
+      white-space: nowrap;
+      border: none;
+      background: none;
+      font-family: inherit;
+    }
+
+    .tool-item:hover { color: var(--text); }
+
+    .tool-item svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .tool-separator {
+      flex: 1;
+    }
+
+    .tool-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--border);
+      margin: 0 4px;
+    }
+
+    /* Search input in toolbar */
+    .tool-search {
+      border: none;
+      background: none;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      width: 120px;
+      font-family: inherit;
+      padding: 12px 0;
+    }
+
+    .tool-search::placeholder { color: var(--text-secondary); }
+
+    /* Custom text input */
+    .tool-text-input {
+      border: none;
+      background: none;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      flex: 1;
+      min-width: 200px;
+      font-family: inherit;
+      padding: 12px 0;
+    }
+
+    .tool-text-input::placeholder { color: var(--text-secondary); }
+
+    /* Dropdown */
+    .dropdown {
+      position: relative;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 0;
+      min-width: 160px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      z-index: 200;
+      display: none;
+    }
+
+    .dropdown.open .dropdown-menu {
+      display: block;
+    }
+
+    .dropdown-item {
+      padding: 8px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s;
+      color: var(--text);
+    }
+
+    .dropdown-item:hover { background: var(--hover-bg); }
+    .dropdown-item.active { font-weight: 600; }
+
+    /* Font size slider */
+    .size-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+    }
+
+    .size-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      min-width: 45px;
+    }
+
+    .size-slider {
+      -webkit-appearance: none;
+      width: 120px;
+      height: 2px;
+      background: var(--border);
+      border-radius: 2px;
+      outline: none;
+    }
+
+    .size-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--text);
+      cursor: pointer;
+    }
+
+    /* Preview mode tabs */
+    .preview-tabs {
+      display: flex;
+      gap: 0;
+    }
+
+    .preview-tab {
+      padding: 12px 12px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-family: inherit;
+      transition: color 0.2s;
+    }
+
+    .preview-tab:hover { color: var(--text); }
+    .preview-tab.active { color: var(--text); font-weight: 600; }
+
+    /* Align buttons */
+    .align-btn {
+      padding: 8px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+    }
+
+    .align-btn:hover, .align-btn.active { color: var(--text); }
+
+    .align-btn svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    /* Theme toggle */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .theme-btn {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .theme-btn.light-btn { background: var(--bg); }
+    .theme-btn.dark-btn { background: #1a1a1a; }
+    .theme-btn.active { border-color: var(--text); }
+
+    /* Reset */
+    .reset-btn {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-family: inherit;
+      transition: color 0.2s;
+    }
+
+    .reset-btn:hover { color: var(--text); }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--text);
+      color: var(--bg);
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      z-index: 999;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ===== LOADING / UNSUPPORTED ===== */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 40px;
+      gap: 16px;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--text);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text { font-size: 15px; color: var(--text-secondary); }
+
+    .unsupported {
+      text-align: center;
+      padding: 120px 40px;
+    }
+
+    .unsupported h2 { font-size: 24px; margin-bottom: 12px; }
+    .unsupported p { color: var(--text-secondary); font-size: 15px; line-height: 1.6; }
+
+    .pick-btn {
+      padding: 14px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pick-btn:hover { opacity: 0.85; transform: scale(1.02); }
+
+    /* ===== GRID ===== */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 0;
+    }
+
+    /* ===== CARD ===== */
+    .card {
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 32px;
+      cursor: pointer;
+      transition: background 0.2s;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .card:hover { background: var(--hover-bg); }
+    .card:hover .card-hint { opacity: 1; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-preview {
+      line-height: 1.2;
+      margin-bottom: 20px;
+      min-height: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: letter-spacing 0.3s;
+    }
+
+    .card:hover .card-preview { letter-spacing: 1px; }
+
+    .card-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-name { font-size: 15px; font-weight: 600; }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-category {
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: var(--bg);
+      padding: 3px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .card-hint {
+      font-size: 12px;
+      color: var(--accent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .card-styles {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Text align modes */
+    .card-preview.align-left { text-align: left; }
+    .card-preview.align-center { text-align: center; }
+    .card-preview.align-right { text-align: right; }
+</style>
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div class="logo">Fontssss view<sup>™</sup></div>
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="all" onclick="switchTab('all')">
+        <span class="tab-label">All Fonts</span>
+        <span class="tab-count" id="navFontCount">0</span>
+      </button>
+      <button class="nav-tab" data-tab="misans" onclick="switchTab('misans')">
+        <span class="tab-label">MiSans</span>
+        <span class="tab-count" id="navMiSansCount"></span>
+      </button>
+    </nav>
+    <div class="header-right">
+      <span id="selectedInfo" style="color:var(--text-secondary)">No styles selected</span>
+    </div>
+  </header>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <!-- Row 1 -->
+    <div class="toolbar-row">
+      <button class="tool-item" id="searchToggle">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Search
+      </button>
+      <input type="text" class="tool-search" id="searchBox" placeholder="Type to search..." style="display:none" />
+
+      <div class="tool-divider"></div>
+
+      <!-- Categories dropdown -->
+      <div class="dropdown" id="catDropdown">
+        <button class="tool-item" onclick="toggleDropdown('catDropdown')">
+          Categories
+          <svg viewBox="0 0 24 24" width="10" height="10"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="dropdown-menu">
+          <div class="dropdown-item active" data-cat="all" onclick="setCategory('all')">All</div>
+          <div class="dropdown-item" data-cat="sans-serif" onclick="setCategory('sans-serif')">Sans-Serif</div>
+          <div class="dropdown-item" data-cat="serif" onclick="setCategory('serif')">Serif</div>
+          <div class="dropdown-item" data-cat="monospace" onclick="setCategory('monospace')">Monospace</div>
+          <div class="dropdown-item" data-cat="cursive" onclick="setCategory('cursive')">Script / Cursive</div>
+        </div>
+      </div>
+
+      <div class="tool-separator"></div>
+
+      <!-- Properties dropdown -->
+      <div class="dropdown" id="propDropdown">
+        <button class="tool-item" onclick="toggleDropdown('propDropdown')">
+          Properties
+          <svg viewBox="0 0 24 24" width="10" height="10"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="dropdown-menu">
+          <div class="dropdown-item active" data-prop="all" onclick="setProperty('all')">All</div>
+          <div class="dropdown-item" data-prop="multi" onclick="setProperty('multi')">Multiple styles</div>
+          <div class="dropdown-item" data-prop="single" onclick="setProperty('single')">Single style</div>
+        </div>
+      </div>
+
+      <div class="tool-separator"></div>
+
+      <!-- Font size slider -->
+      <div class="size-control">
+        <span class="size-label" id="sizeLabel">42px</span>
+        <input type="range" class="size-slider" id="sizeSlider" min="24" max="160" value="42" />
+      </div>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="toolbar-row">
+      <button class="tool-item" id="textToggle">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Your Text
+      </button>
+      <input type="text" class="tool-text-input" id="customText" placeholder="Type preview text..." />
+
+      <div class="tool-separator"></div>
+
+      <!-- Preview mode -->
+      <div class="preview-tabs">
+        <button class="preview-tab" data-mode="cities" onclick="setPreviewMode('cities')">Cities</button>
+        <button class="preview-tab" data-mode="excerpts" onclick="setPreviewMode('excerpts')">Excerpts</button>
+        <button class="preview-tab active" data-mode="names" onclick="setPreviewMode('names')">Names</button>
+      </div>
+
+      <div class="tool-divider"></div>
+
+      <!-- Alignment -->
+      <button class="align-btn active" data-align="left" onclick="setAlign('left')">
+        <svg viewBox="0 0 24 24"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="17" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+      </button>
+      <button class="align-btn" data-align="center" onclick="setAlign('center')">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="18" y1="14" x2="6" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+      </button>
+      <button class="align-btn" data-align="right" onclick="setAlign('right')">
+        <svg viewBox="0 0 24 24"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="7" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+      </button>
+
+      <div class="tool-divider"></div>
+
+      <!-- Theme toggle -->
+      <div class="theme-toggle">
+        <div class="theme-btn light-btn active" onclick="setTheme('light')"></div>
+        <div class="theme-btn dark-btn" onclick="setTheme('dark')"></div>
+      </div>
+
+      <div class="tool-divider"></div>
+
+      <button class="reset-btn" onclick="resetAll()">Reset All</button>
+    </div>
+  </div>
+
+  <div id="app"></div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- State ----
+    let allFonts = [];
+    let currentFilter = 'all';
+    let currentProperty = 'all';
+    let currentTab = 'all';
+    let searchQuery = '';
+    let fontSize = 42;
+    let previewMode = 'names';
+    let textAlign = 'left';
+    let customText = '';
+
+    const CITIES = ['Hamburg', 'Tokyo', 'São Paulo', 'Melbourne', 'Reykjavik', 'Nairobi', 'Montréal', 'Zürich', 'Bangalore', 'Oslo'];
+    const EXCERPTS = [
+      'The quick brown fox jumps over the lazy dog',
+      'Pack my box with five dozen liquor jugs',
+      'How vexingly quick daft zebras jump',
+      'Sphinx of black quartz judge my vow',
+      'Two driven jocks help fax my big quiz',
+      'Bright vixens jump dozy fowl quack',
+      'Jackdaws love my big sphinx of quartz',
+      'Grumpy wizards make toxic brew for the evil queen',
+      'Few quips galvanized the mock jury box',
+      'The five boxing wizards jump quickly'
+    ];
+
+    // ---- Toast ----
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    // ---- Copy ----
+    function copyName(name) {
+      navigator.clipboard.writeText(name).then(() => showToast(`Copied "${name}"`));
+    }
+
+    // ---- Classify font ----
+    function classifyFont(family) {
+      const f = family.toLowerCase();
+      if (/mono|consol|courier|code|fira\s?code|jetbrains|hack|menlo|source\s?code/i.test(f)) return 'monospace';
+      if (/script|cursive|hand|brush|dancing|pacifico|caveat|satisfy/i.test(f)) return 'cursive';
+      if (/serif|georgia|times|garamond|palatino|baskerville|cambria|didot|bodoni/i.test(f)) {
+        if (/sans/i.test(f)) return 'sans-serif';
+        return 'serif';
+      }
+      return 'sans-serif';
+    }
+
+    // ---- Get preview text ----
+    function getPreviewText(font, index) {
+      if (customText) return customText;
+      switch (previewMode) {
+        case 'cities': return CITIES[index % CITIES.length];
+        case 'excerpts': return EXCERPTS[index % EXCERPTS.length];
+        case 'names': default: return font.family;
+      }
+    }
+
+    // ---- Dropdown ----
+    function toggleDropdown(id) {
+      const el = document.getElementById(id);
+      const wasOpen = el.classList.contains('open');
+      document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('open'));
+      if (!wasOpen) el.classList.add('open');
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.dropdown')) {
+        document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('open'));
+      }
+    });
+
+    // ---- Filters ----
+    function setCategory(cat) {
+      currentFilter = cat;
+      document.querySelectorAll('#catDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.cat === cat));
+      document.getElementById('catDropdown').classList.remove('open');
+      render();
+    }
+
+    function setProperty(prop) {
+      currentProperty = prop;
+      document.querySelectorAll('#propDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.prop === prop));
+      document.getElementById('propDropdown').classList.remove('open');
+      render();
+    }
+
+    function setPreviewMode(mode) {
+      previewMode = mode;
+      document.querySelectorAll('.preview-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+      render();
+    }
+
+    function setAlign(align) {
+      textAlign = align;
+      document.querySelectorAll('.align-btn').forEach(b => b.classList.toggle('active', b.dataset.align === align));
+      render();
+    }
+
+    function setTheme(theme) {
+      document.body.classList.toggle('dark', theme === 'dark');
+      document.querySelectorAll('.theme-btn').forEach(b => {
+        b.classList.toggle('active', (theme === 'light' && b.classList.contains('light-btn')) || (theme === 'dark' && b.classList.contains('dark-btn')));
+      });
+    }
+
+    function resetAll() {
+      currentFilter = 'all';
+      currentProperty = 'all';
+      searchQuery = '';
+      fontSize = 42;
+      previewMode = 'names';
+      textAlign = 'left';
+      customText = '';
+      document.getElementById('searchBox').value = '';
+      document.getElementById('searchBox').style.display = 'none';
+      document.getElementById('customText').value = '';
+      document.getElementById('customText').style.display = 'none';
+      document.getElementById('sizeSlider').value = 42;
+      document.getElementById('sizeLabel').textContent = '42px';
+      document.body.classList.remove('dark');
+      document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.classList.contains('light-btn')));
+      document.querySelectorAll('.preview-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === 'names'));
+      document.querySelectorAll('.align-btn').forEach(b => b.classList.toggle('active', b.dataset.align === 'left'));
+      document.querySelectorAll('#catDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.cat === 'all'));
+      document.querySelectorAll('#propDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.prop === 'all'));
+      render();
+    }
+
+    // ---- Tab switch ----
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      render();
+    }
+
+    // ---- Render ----
+    function render() {
+      const app = document.getElementById('app');
+      let fonts = allFonts;
+
+      // Tab filter
+      if (currentTab === 'misans') {
+        fonts = fonts.filter(f => /misan/i.test(f.family));
+      }
+
+      if (currentFilter !== 'all') fonts = fonts.filter(f => f.category === currentFilter);
+      if (currentProperty === 'multi') fonts = fonts.filter(f => f.styleCount > 1);
+      if (currentProperty === 'single') fonts = fonts.filter(f => f.styleCount === 1);
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        fonts = fonts.filter(f => f.family.toLowerCase().includes(q));
+      }
+
+      // Update counts
+      document.getElementById('navFontCount').textContent = allFonts.length;
+      const miSansCount = allFonts.filter(f => /misan/i.test(f.family)).length;
+      document.getElementById('navMiSansCount').textContent = miSansCount || '';
+
+      if (fonts.length === 0) {
+        app.innerHTML = `<div style="text-align:center;padding:80px 40px;color:var(--text-secondary);"><p style="font-size:18px;">No fonts found</p></div>`;
+        return;
+      }
+
+      app.innerHTML = `<div class="grid">${fonts.map((f, i) => `
+        <div class="card" style="animation-delay:${Math.min(i * 20, 400)}ms" onclick="copyName('${f.family.replace(/'/g, "\\'")}')">
+          <div class="card-preview align-${textAlign}" style="font-family:'${f.family}',sans-serif;font-size:${fontSize}px">
+            ${getPreviewText(f, i)}
+          </div>
+          <div class="card-info">
+            <div>
+              <div class="card-name">${f.family}</div>
+              <div class="card-styles">${f.styleCount} style${f.styleCount > 1 ? 's' : ''}</div>
+            </div>
+            <div class="card-meta">
+              <span class="card-hint">Click to copy</span>
+            </div>
+          </div>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    // ---- Load from font files ----
+    let fontFaceCounter = 0;
+
+    async function loadFromFiles(files) {
+      const app = document.getElementById('app');
+      app.innerHTML = `<div class="loading"><div class="spinner"></div><div class="loading-text">Loading font files...</div></div>`;
+
+      const familyMap = new Map();
+      const validExts = ['.ttf', '.otf', '.woff', '.woff2', '.ttc'];
+
+      for (const file of files) {
+        const name = file.name.toLowerCase();
+        if (!validExts.some(ext => name.endsWith(ext))) continue;
+        try {
+          const buf = await file.arrayBuffer();
+          let family = file.name.replace(/\.[^.]+$/, '')
+            .replace(/[-_](Regular|Bold|Italic|Light|Medium|Thin|Black|SemiBold|ExtraBold|ExtraLight|Heavy|Condensed|Expanded|Oblique|Book|Demi|Ultra)/gi, '')
+            .replace(/[-_]/g, ' ').trim();
+          if (!family) family = file.name.replace(/\.[^.]+$/, '');
+
+          const fontFace = new FontFace(family, buf);
+          await fontFace.load();
+          document.fonts.add(fontFace);
+
+          if (!familyMap.has(family)) familyMap.set(family, { family, styles: [] });
+          familyMap.get(family).styles.push(file.name);
+        } catch (e) { /* skip */ }
+      }
+
+      allFonts = Array.from(familyMap.values()).map(f => ({
+        ...f, category: classifyFont(f.family), styleCount: f.styles.length
+      }));
+      allFonts.sort((a, b) => a.family.localeCompare(b.family));
+      render();
+
+      if (allFonts.length === 0) {
+        app.innerHTML = `<div class="unsupported"><h2>No fonts found</h2><p>No valid font files found in the selected folder.</p><br><button class="pick-btn" onclick="pickFolder()">Try another folder</button></div>`;
+      }
+    }
+
+    async function pickFolder() {
+      try {
+        const dirHandle = await window.showDirectoryPicker();
+        const files = [];
+        for await (const entry of dirHandle.values()) {
+          if (entry.kind === 'file') files.push(await entry.getFile());
+        }
+        for await (const entry of dirHandle.values()) {
+          if (entry.kind === 'directory') {
+            try { for await (const sub of entry.values()) { if (sub.kind === 'file') files.push(await sub.getFile()); } } catch(e) {}
+          }
+        }
+        await loadFromFiles(files);
+      } catch (e) { /* cancelled */ }
+    }
+
+    async function loadFonts() {
+      const app = document.getElementById('app');
+      if ('queryLocalFonts' in window) {
+        app.innerHTML = `<div class="loading"><div class="spinner"></div><div class="loading-text">Reading local fonts...</div></div>`;
+        try {
+          const fonts = await window.queryLocalFonts();
+          if (fonts && fonts.length > 0) {
+            const familyMap = new Map();
+            for (const font of fonts) {
+              if (!familyMap.has(font.family)) familyMap.set(font.family, { family: font.family, styles: [] });
+              familyMap.get(font.family).styles.push(font.style);
+            }
+            allFonts = Array.from(familyMap.values()).map(f => ({
+              ...f, category: classifyFont(f.family), styleCount: f.styles.length
+            }));
+            allFonts.sort((a, b) => a.family.localeCompare(b.family));
+            render();
+            return;
+          }
+        } catch (e) { /* fall through */ }
+      }
+      showPickerUI();
+    }
+
+    function showPickerUI() {
+      document.getElementById('app').innerHTML = `
+        <div class="unsupported">
+          <h2>Select Your Fonts Folder</h2>
+          <p style="margin-bottom:24px">Choose a folder containing font files (.ttf, .otf, .woff) to preview.</p>
+          <button class="pick-btn" onclick="pickFolder()">📁 Choose Font Folder</button>
+          <p style="margin-top:16px;font-size:13px;color:var(--text-secondary)">Tip on macOS: fonts are usually in <code>/Library/Fonts</code> or <code>~/Library/Fonts</code></p>
+        </div>`;
+    }
+
+    // ---- Events ----
+    document.getElementById('searchToggle').addEventListener('click', () => {
+      const box = document.getElementById('searchBox');
+      box.style.display = box.style.display === 'none' ? 'inline-block' : 'none';
+      if (box.style.display !== 'none') box.focus();
+    });
+
+    document.getElementById('searchBox').addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      render();
+    });
+
+    document.getElementById('textToggle').addEventListener('click', () => {
+      document.getElementById('customText').focus();
+    });
+
+    document.getElementById('customText').addEventListener('input', (e) => {
+      customText = e.target.value;
+      render();
+    });
+
+    document.getElementById('sizeSlider').addEventListener('input', (e) => {
+      fontSize = parseInt(e.target.value);
+      document.getElementById('sizeLabel').textContent = fontSize + 'px';
+      render();
+    });
+
+    // ---- Init ----
+    loadFonts();
+  </script>
+</body>
+</html>
