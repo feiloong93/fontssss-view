@@ -62,16 +62,11 @@
       display: flex;
       align-items: center;
       white-space: nowrap;
-      cursor: pointer;
-      transition: opacity 0.2s;
+      cursor: default;
     }
 
-    .logo:hover { opacity: 0.7; }
-
-    .logo sup {
-      font-size: 11px;
-      vertical-align: super;
-      margin-left: 1px;
+    .logo svg {
+      display: block;
     }
 
     .nav-tabs {
@@ -786,7 +781,7 @@
 <body>
   <!-- HEADER -->
   <header>
-    <div class="logo" onclick="goHome()"><canvas id="logoCanvas" style="display:block;"></canvas></div>
+    <div class="logo"><svg id="logoSvg" aria-label="Fontssss view"></svg></div>
     <nav class="nav-tabs">
       <button class="nav-tab active" data-tab="all" onclick="switchTab('all')">
         <span class="tab-label">All Fonts</span>
@@ -1799,184 +1794,223 @@
       render();
     });
 
-    // ---- Logo with SVG-edit node effect ----
-    let _logoAnchors = []; // cached anchors for hover animation
-    let _logoEdges = [];
-
-    function drawLogoNodes(hoverT) {
-      hoverT = hoverT || 0; // 0 = static, 1 = fully hovered
-      const canvas = document.getElementById('logoCanvas');
-      if (!canvas) return;
-      const dpr = window.devicePixelRatio || 1;
-      const isDark = document.body.classList.contains('dark');
-      const textColor = isDark ? '#f0f0eb' : '#1a1a1a';
-      const handleLineColor = isDark ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.15)';
-      const nodeStroke = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.3)';
-      const nodeFill = isDark ? '#1a1a1a' : '#ffffff';
-      const handleDotColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.25)';
-
-      const targetFontSize = 48;
-      const text = 'Fontssss view';
-      const ctx = canvas.getContext('2d');
-
-      // Measure
-      ctx.font = `700 ${targetFontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
-      const tm = ctx.measureText(text);
-      const W = Math.ceil(tm.width) + 8;
-      const H = targetFontSize + 16;
-
-      canvas.width = W * dpr;
-      canvas.height = H * dpr;
-      canvas.style.width = W + 'px';
-      canvas.style.height = H + 'px';
-      ctx.scale(dpr, dpr);
-      ctx.clearRect(0, 0, W, H);
-
-      // Draw text
-      ctx.font = `700 ${targetFontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
-      ctx.fillStyle = textColor;
-      ctx.textBaseline = 'top';
-      ctx.fillText(text, 2, 6);
-
-      // Compute anchors only once (cache)
-      if (_logoAnchors.length === 0) {
-        const offscreen = document.createElement('canvas');
-        offscreen.width = W;
-        offscreen.height = H;
-        const octx = offscreen.getContext('2d');
-        octx.font = ctx.font;
-        octx.textBaseline = 'top';
-        octx.fillStyle = '#000';
-        octx.fillText(text, 2, 6);
-        const imgData = octx.getImageData(0, 0, W, H).data;
-
-        const edges = [];
-        const step = 2;
-        for (let y = 1; y < H - 1; y += step) {
-          for (let x = 1; x < W - 1; x += step) {
-            const a = imgData[(y * W + x) * 4 + 3];
-            if (a < 60) continue;
-            const neighbors = [
-              imgData[((y-1) * W + x) * 4 + 3],
-              imgData[((y+1) * W + x) * 4 + 3],
-              imgData[(y * W + x-1) * 4 + 3],
-              imgData[(y * W + x+1) * 4 + 3],
-            ];
-            if (neighbors.some(n => n < 30)) {
-              edges.push({ x, y });
-            }
-          }
-        }
-
-        const spacing = 14;
-        for (const p of edges) {
-          if (!_logoAnchors.some(a => (a.x-p.x)**2 + (a.y-p.y)**2 < spacing*spacing)) {
-            _logoAnchors.push(p);
-          }
-        }
-
-        // Pre-compute handle data with seeded random
-        let seed = 42;
-        function srand() { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; }
-        for (const n of _logoAnchors) {
-          n.hasHandle = srand() < 0.35;
-          const cx = W / 2, cy = H / 2;
-          n.angle = Math.atan2(n.y - cy, n.x - cx) + (srand() - 0.5) * 1.2;
-          n.len1 = 10 + srand() * 14;
-          n.hasSecond = srand() > 0.3;
-          n.len2ratio = 0.4 + srand() * 0.4;
-        }
-      }
-
-      const anchors = _logoAnchors;
-
-      // Handle extension multiplier: grows on hover
-      const ext = 1 + hoverT * 0.5;
-      const handleAlpha = 1 + hoverT * 0.6;
-
-      // Draw handles
-      ctx.lineWidth = 0.8;
-      for (const n of anchors) {
-        if (!n.hasHandle) continue;
-        const len1 = n.len1 * ext;
-        const hx1 = n.x + Math.cos(n.angle) * len1;
-        const hy1 = n.y + Math.sin(n.angle) * len1;
-
-        ctx.strokeStyle = handleLineColor;
-        ctx.globalAlpha = Math.min(handleAlpha, 1);
-        ctx.beginPath();
-        ctx.moveTo(n.x, n.y);
-        ctx.lineTo(hx1, hy1);
-        ctx.stroke();
-
-        ctx.fillStyle = handleDotColor;
-        ctx.beginPath();
-        ctx.arc(hx1, hy1, 2, 0, Math.PI * 2);
-        ctx.fill();
-
-        if (n.hasSecond) {
-          const len2 = n.len1 * n.len2ratio * ext;
-          const hx2 = n.x - Math.cos(n.angle) * len2;
-          const hy2 = n.y - Math.sin(n.angle) * len2;
-          ctx.strokeStyle = handleLineColor;
-          ctx.beginPath();
-          ctx.moveTo(n.x, n.y);
-          ctx.lineTo(hx2, hy2);
-          ctx.stroke();
-          ctx.fillStyle = handleDotColor;
-          ctx.beginPath();
-          ctx.arc(hx2, hy2, 2, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-      ctx.globalAlpha = 1;
-
-      // Draw anchor nodes
-      const sz = 2.5;
-      for (const n of anchors) {
-        ctx.fillStyle = nodeFill;
-        ctx.fillRect(n.x - sz, n.y - sz, sz * 2, sz * 2);
-        ctx.strokeStyle = nodeStroke;
-        ctx.lineWidth = 1;
-        ctx.strokeRect(n.x - sz, n.y - sz, sz * 2, sz * 2);
-      }
-    }
-
-    // Redraw logo on theme change
-    const origSetTheme = setTheme;
-    setTheme = function(theme) {
-      origSetTheme(theme);
-      drawLogoNodes();
-    };
-
-    // Hover interaction: animate handles on mouse enter/leave
-    let logoHovered = false;
+    // ---- Logo: SVG bezier node editor effect ----
+    const LOGO_TEXT = 'Fontssss view';
+    const LOGO_FONT_SIZE = 48;
+    let logoPathData = null;
+    let logoSvgReady = false;
+    let logoHoverActive = false;
+    let logoDragging = null;
     let logoAnimFrame = null;
-    let logoHoverT = 0;
-    const logoEl = document.querySelector('.logo');
+    let logoShowNodes = 0;
+    let logoSpringFrame = null;
+    const LOGO_FONT_URL = 'https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.woff2';
 
-    function animateLogoHover() {
-      if (!logoHovered && logoHoverT <= 0) { logoAnimFrame = null; return; }
-      if (logoHovered && logoHoverT >= 1) { logoAnimFrame = null; return; }
-      logoHoverT += logoHovered ? 0.08 : -0.06;
-      logoHoverT = Math.max(0, Math.min(1, logoHoverT));
-      drawLogoNodes(logoHoverT);
-      logoAnimFrame = requestAnimationFrame(animateLogoHover);
+    async function initLogo() {
+      try {
+        const resp = await fetch(LOGO_FONT_URL);
+        const buf = await resp.arrayBuffer();
+        const font = opentype.parse(buf);
+        const path = font.getPath(LOGO_TEXT, 0, LOGO_FONT_SIZE * 0.78, LOGO_FONT_SIZE);
+        buildLogoPathData(path.commands);
+        renderLogoSvg();
+        logoSvgReady = true;
+      } catch (e) {
+        const svg = document.getElementById('logoSvg');
+        svg.innerHTML = `<text x="0" y="38" font-size="48" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" fill="currentColor">${LOGO_TEXT}</text>`;
+        const bbox = svg.getBBox();
+        svg.setAttribute('width', Math.ceil(bbox.width + 4));
+        svg.setAttribute('height', Math.ceil(bbox.height + 4));
+        svg.setAttribute('viewBox', `${bbox.x-2} ${bbox.y-2} ${bbox.width+4} ${bbox.height+4}`);
+      }
     }
+
+    function buildLogoPathData(cmds) {
+      logoPathData = cmds.map(c => {
+        const e = { type: c.type };
+        if (c.x !== undefined) { e.x = c.x; e.origX = c.x; }
+        if (c.y !== undefined) { e.y = c.y; e.origY = c.y; }
+        if (c.x1 !== undefined) { e.x1 = c.x1; e.origX1 = c.x1; }
+        if (c.y1 !== undefined) { e.y1 = c.y1; e.origY1 = c.y1; }
+        if (c.x2 !== undefined) { e.x2 = c.x2; e.origX2 = c.x2; }
+        if (c.y2 !== undefined) { e.y2 = c.y2; e.origY2 = c.y2; }
+        return e;
+      });
+    }
+
+    function logoPathToD() {
+      return logoPathData.map(c => {
+        switch (c.type) {
+          case 'M': return `M${c.x.toFixed(1)} ${c.y.toFixed(1)}`;
+          case 'L': return `L${c.x.toFixed(1)} ${c.y.toFixed(1)}`;
+          case 'Q': return `Q${c.x1.toFixed(1)} ${c.y1.toFixed(1)} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`;
+          case 'C': return `C${c.x1.toFixed(1)} ${c.y1.toFixed(1)} ${c.x2.toFixed(1)} ${c.y2.toFixed(1)} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`;
+          case 'Z': return 'Z';
+          default: return '';
+        }
+      }).join('');
+    }
+
+    function renderLogoSvg() {
+      if (!logoPathData) return;
+      const svg = document.getElementById('logoSvg');
+      const isDark = document.body.classList.contains('dark');
+      const fillColor = isDark ? '#f0f0eb' : '#1a1a1a';
+      const handleColor = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)';
+      const nodeStroke = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.45)';
+      const nodeFill = isDark ? '#1a1a1a' : '#ffffff';
+      const handleDotFill = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)';
+      const d = logoPathToD();
+
+      let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+      for (const c of logoPathData) {
+        for (const k of ['x','y','x1','y1','x2','y2']) {
+          if (c[k]===undefined) continue;
+          if (k.startsWith('x')) { minX=Math.min(minX,c[k]); maxX=Math.max(maxX,c[k]); }
+          else { minY=Math.min(minY,c[k]); maxY=Math.max(maxY,c[k]); }
+        }
+      }
+      const pad=8;
+      const vbW=(maxX-minX)+pad*2, vbH=(maxY-minY)+pad*2;
+      const scale=(LOGO_FONT_SIZE+12)/vbH;
+      svg.setAttribute('width', Math.ceil(vbW*scale));
+      svg.setAttribute('height', Math.ceil(vbH*scale));
+      svg.setAttribute('viewBox', `${minX-pad} ${minY-pad} ${vbW} ${vbH}`);
+
+      const op = logoShowNodes;
+      let html = `<path d="${d}" fill="${fillColor}"/>`;
+
+      if (op > 0.01) {
+        html += `<path d="${d}" fill="none" stroke="${fillColor}" stroke-width="0.5" opacity="${op*0.25}"/>`;
+        let px=0, py=0;
+        const ns=1.6, hr=1.0;
+        for (let i=0; i<logoPathData.length; i++) {
+          const c = logoPathData[i];
+          if (c.type==='Q') {
+            html += `<line x1="${px}" y1="${py}" x2="${c.x1}" y2="${c.y1}" stroke="${handleColor}" stroke-width="0.5" opacity="${op}"/>`;
+            html += `<line x1="${c.x1}" y1="${c.y1}" x2="${c.x}" y2="${c.y}" stroke="${handleColor}" stroke-width="0.5" opacity="${op}"/>`;
+            html += `<circle cx="${c.x1}" cy="${c.y1}" r="${hr}" fill="${handleDotFill}" opacity="${op}" data-seg="${i}" data-prop="x1y1" class="logo-handle" style="cursor:grab"/>`;
+          }
+          if (c.type==='C') {
+            html += `<line x1="${px}" y1="${py}" x2="${c.x1}" y2="${c.y1}" stroke="${handleColor}" stroke-width="0.5" opacity="${op}"/>`;
+            html += `<circle cx="${c.x1}" cy="${c.y1}" r="${hr}" fill="${handleDotFill}" opacity="${op}" data-seg="${i}" data-prop="x1y1" class="logo-handle" style="cursor:grab"/>`;
+            html += `<line x1="${c.x}" y1="${c.y}" x2="${c.x2}" y2="${c.y2}" stroke="${handleColor}" stroke-width="0.5" opacity="${op}"/>`;
+            html += `<circle cx="${c.x2}" cy="${c.y2}" r="${hr}" fill="${handleDotFill}" opacity="${op}" data-seg="${i}" data-prop="x2y2" class="logo-handle" style="cursor:grab"/>`;
+          }
+          if (c.x!==undefined && c.type!=='Z') {
+            html += `<rect x="${c.x-ns}" y="${c.y-ns}" width="${ns*2}" height="${ns*2}" fill="${nodeFill}" stroke="${nodeStroke}" stroke-width="0.5" opacity="${op}" data-seg="${i}" data-prop="xy" class="logo-anchor" style="cursor:grab"/>`;
+          }
+          if (c.x!==undefined) { px=c.x; py=c.y; }
+        }
+      }
+      svg.innerHTML = html;
+    }
+
+    function animateLogoNodes(show) {
+      if (logoAnimFrame) cancelAnimationFrame(logoAnimFrame);
+      const target = show ? 1 : 0;
+      function tick() {
+        const diff = target - logoShowNodes;
+        if (Math.abs(diff) < 0.02) { logoShowNodes=target; renderLogoSvg(); logoAnimFrame=null; return; }
+        logoShowNodes += diff * 0.15;
+        renderLogoSvg();
+        logoAnimFrame = requestAnimationFrame(tick);
+      }
+      tick();
+    }
+
+    function logoSvgCoords(e) {
+      const svg = document.getElementById('logoSvg');
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX; pt.y = e.clientY;
+      return pt.matrixTransform(svg.getScreenCTM().inverse());
+    }
+
+    function onLogoPointerDown(e) {
+      if (!logoSvgReady || !logoPathData) return;
+      const el = e.target;
+      if (!el.dataset || !el.dataset.seg) return;
+      e.preventDefault(); e.stopPropagation();
+      const segIdx = parseInt(el.dataset.seg);
+      const prop = el.dataset.prop;
+      const coords = logoSvgCoords(e);
+      const c = logoPathData[segIdx];
+      logoDragging = { segIdx, prop, startX: coords.x, startY: coords.y };
+      if (prop==='xy') { logoDragging.origX=c.x; logoDragging.origY=c.y; }
+      else if (prop==='x1y1') { logoDragging.origX=c.x1; logoDragging.origY=c.y1; }
+      else if (prop==='x2y2') { logoDragging.origX=c.x2; logoDragging.origY=c.y2; }
+      document.addEventListener('pointermove', onLogoPointerMove);
+      document.addEventListener('pointerup', onLogoPointerUp);
+    }
+
+    function onLogoPointerMove(e) {
+      if (!logoDragging) return;
+      const coords = logoSvgCoords(e);
+      const dx = coords.x - logoDragging.startX;
+      const dy = coords.y - logoDragging.startY;
+      const c = logoPathData[logoDragging.segIdx];
+      if (logoDragging.prop==='xy') { c.x=logoDragging.origX+dx; c.y=logoDragging.origY+dy; }
+      else if (logoDragging.prop==='x1y1') { c.x1=logoDragging.origX+dx; c.y1=logoDragging.origY+dy; }
+      else if (logoDragging.prop==='x2y2') { c.x2=logoDragging.origX+dx; c.y2=logoDragging.origY+dy; }
+      renderLogoSvg();
+    }
+
+    function onLogoPointerUp() {
+      logoDragging = null;
+      document.removeEventListener('pointermove', onLogoPointerMove);
+      document.removeEventListener('pointerup', onLogoPointerUp);
+    }
+
+    function springBackLogo() {
+      if (!logoPathData) return;
+      let maxD = 0;
+      for (const c of logoPathData) {
+        for (const k of ['x','y','x1','y1','x2','y2']) {
+          const ok = 'orig' + k.charAt(0).toUpperCase() + k.slice(1);
+          if (c[ok]===undefined) continue;
+          const diff = c[ok] - c[k];
+          c[k] += diff * 0.12;
+          maxD = Math.max(maxD, Math.abs(diff));
+        }
+      }
+      renderLogoSvg();
+      if (maxD > 0.1) { logoSpringFrame = requestAnimationFrame(springBackLogo); }
+      else {
+        for (const c of logoPathData) {
+          for (const k of ['x','y','x1','y1','x2','y2']) {
+            const ok = 'orig' + k.charAt(0).toUpperCase() + k.slice(1);
+            if (c[ok]!==undefined) c[k] = c[ok];
+          }
+        }
+        renderLogoSvg();
+        logoSpringFrame = null;
+      }
+    }
+
+    const logoEl = document.querySelector('.logo');
+    const logoSvg = document.getElementById('logoSvg');
 
     logoEl.addEventListener('mouseenter', () => {
-      logoHovered = true;
-      if (!logoAnimFrame) animateLogoHover();
+      logoHoverActive = true;
+      if (logoSpringFrame) { cancelAnimationFrame(logoSpringFrame); logoSpringFrame=null; }
+      animateLogoNodes(true);
     });
     logoEl.addEventListener('mouseleave', () => {
-      logoHovered = false;
-      if (!logoAnimFrame) animateLogoHover();
+      logoHoverActive = false;
+      logoDragging = null;
+      document.removeEventListener('pointermove', onLogoPointerMove);
+      document.removeEventListener('pointerup', onLogoPointerUp);
+      animateLogoNodes(false);
+      if (logoPathData) logoSpringFrame = requestAnimationFrame(springBackLogo);
     });
+    logoSvg.addEventListener('pointerdown', onLogoPointerDown);
+
+    const origSetTheme = setTheme;
+    setTheme = function(theme) { origSetTheme(theme); if (logoSvgReady) renderLogoSvg(); };
 
     // ---- Init ----
     loadFonts();
-    // Draw logo after a tick so fonts are ready
-    requestAnimationFrame(drawLogoNodes);
+    initLogo();
   </script>
 </body>
 </html>
