@@ -861,7 +861,6 @@
 
       <!-- Preview mode -->
       <div class="preview-tabs">
-        <button class="preview-tab" data-mode="cities" onclick="setPreviewMode('cities')">Cities</button>
         <button class="preview-tab" data-mode="excerpts" onclick="setPreviewMode('excerpts')">Excerpts</button>
         <button class="preview-tab" data-mode="numbers" onclick="setPreviewMode('numbers')">Numbers</button>
         <button class="preview-tab active" data-mode="names" onclick="setPreviewMode('names')">Names</button>
@@ -957,7 +956,6 @@
       render();
     }
 
-    const CITIES = ['Hamburg', 'Tokyo', 'São Paulo', 'Melbourne', 'Reykjavik', 'Nairobi', 'Montréal', 'Zürich', 'Bangalore', 'Oslo'];
     const EXCERPTS = [
       'The quick brown fox jumps over the lazy dog',
       'Pack my box with five dozen liquor jugs',
@@ -1039,7 +1037,6 @@
       // Check if font needs script-specific preview
       const scriptText = getScriptPreview(font.family);
       switch (previewMode) {
-        case 'cities': return scriptText || CITIES[index % CITIES.length];
         case 'excerpts': return scriptText || EXCERPTS[index % EXCERPTS.length];
         case 'numbers': return '0123456789';
         case 'names': default: return scriptText || font.family;
@@ -1853,8 +1850,20 @@
         const resp = await fetch(LOGO_FONT_URL);
         const buf = await resp.arrayBuffer();
         const font = opentype.parse(buf);
-        const path = font.getPath(LOGO_TEXT, 0, LOGO_FONT_SIZE * 0.78, LOGO_FONT_SIZE);
-        buildLogoPathData(path.commands);
+        // Build path with tighter letter-spacing (-0.04em)
+        const kerningFactor = -0.04;
+        const baseline = LOGO_FONT_SIZE * 0.78;
+        let xPos = 0;
+        const allCmds = [];
+        for (let ci = 0; ci < LOGO_TEXT.length; ci++) {
+          const ch = LOGO_TEXT[ci];
+          const glyph = font.charToGlyph(ch);
+          const glyphPath = glyph.getPath(xPos, baseline, LOGO_FONT_SIZE);
+          allCmds.push(...glyphPath.commands);
+          const advance = (glyph.advanceWidth / font.unitsPerEm) * LOGO_FONT_SIZE;
+          xPos += advance + kerningFactor * LOGO_FONT_SIZE;
+        }
+        buildLogoPathData(allCmds);
         // Compute fixed viewBox from original path
         let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
         for (const c of logoPathData) {
