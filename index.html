@@ -58,8 +58,11 @@
       display: flex;
       align-items: center;
       white-space: nowrap;
-      cursor: default;
+      cursor: pointer;
+      transition: opacity 0.2s;
     }
+
+    .logo:hover { opacity: 0.7; }
 
     .logo sup {
       font-size: 11px;
@@ -542,33 +545,73 @@
 
     .glyph-body {
       display: flex;
-      min-height: calc(100vh - 200px);
+      height: calc(100vh - 90px);
     }
 
-    .glyph-sidebar {
-      width: 240px;
+    /* Left metrics panel */
+    .glyph-metrics-panel {
+      width: 420px;
       border-right: 1px solid var(--border);
-      padding: 16px 0;
-      overflow-y: auto;
       flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
     }
 
-    .glyph-block-btn {
-      display: block;
-      width: 100%;
-      text-align: left;
-      padding: 8px 20px;
+    .glyph-metrics-info {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
       font-size: 13px;
-      border: none;
-      background: none;
-      cursor: pointer;
       color: var(--text-secondary);
-      font-family: inherit;
-      transition: all 0.15s;
+      display: flex;
+      gap: 24px;
     }
 
-    .glyph-block-btn:hover { color: var(--text); background: var(--hover-bg); }
-    .glyph-block-btn.active { color: var(--text); font-weight: 600; background: var(--hover-bg); }
+    .glyph-metrics-info-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .glyph-metrics-info-item .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .glyph-metrics-canvas-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding: 40px 20px;
+    }
+
+    .glyph-metrics-canvas-wrap canvas {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    .glyph-metrics-details {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 16px;
+    }
+
+    .glyph-metrics-details span {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .glyph-metrics-details .label { opacity: 0.6; }
+    .glyph-metrics-details .value { color: var(--text); font-variant-numeric: tabular-nums; }
 
     .glyph-main {
       flex: 1;
@@ -607,6 +650,16 @@
       border-color: var(--text-secondary);
     }
 
+    .glyph-cell.glyph-selected {
+      background: var(--text);
+      color: var(--bg);
+      z-index: 2;
+      border-color: var(--text);
+    }
+
+    .glyph-cell.glyph-selected .glyph-char { color: var(--bg); }
+    .glyph-cell.glyph-selected .glyph-code { color: var(--bg); opacity: 0.6; }
+
     .glyph-cell .glyph-char {
       font-size: 24px;
       line-height: 1;
@@ -621,87 +674,6 @@
     }
 
     .glyph-cell:hover .glyph-code { opacity: 1; }
-
-    .glyph-cell.empty {
-      opacity: 0.2;
-      cursor: default;
-    }
-
-    .glyph-cell.empty:hover {
-      background: transparent;
-      border-color: var(--border);
-    }
-
-    /* Glyph detail overlay */
-    .glyph-detail-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      z-index: 500;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .glyph-detail-overlay.active {
-      display: flex;
-    }
-
-    .glyph-detail-card {
-      background: var(--card-bg);
-      border-radius: 16px;
-      padding: 48px;
-      min-width: 360px;
-      max-width: 480px;
-      text-align: center;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.2);
-      position: relative;
-    }
-
-    .glyph-detail-close {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      border: none;
-      background: none;
-      cursor: pointer;
-      color: var(--text-secondary);
-      font-size: 20px;
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      transition: background 0.2s;
-    }
-
-    .glyph-detail-close:hover { background: var(--hover-bg); }
-
-    .glyph-detail-char {
-      font-size: 160px;
-      line-height: 1.1;
-      margin-bottom: 24px;
-    }
-
-    .glyph-detail-info {
-      font-size: 14px;
-      color: var(--text-secondary);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .glyph-detail-info span {
-      display: block;
-    }
-
-    .glyph-detail-name {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
 
     .card-styles {
       font-size: 12px;
@@ -747,7 +719,7 @@
 <body>
   <!-- HEADER -->
   <header>
-    <div class="logo">Fontssss view</div>
+    <div class="logo" onclick="goHome()">Fontssss view</div>
     <nav class="nav-tabs">
       <button class="nav-tab active" data-tab="all" onclick="switchTab('all')">
         <span class="tab-label">All Fonts</span>
@@ -873,24 +845,21 @@
       <span class="glyph-font-styles" id="glyphFontStyles"></span>
     </div>
     <div class="glyph-body">
-      <div class="glyph-sidebar" id="glyphSidebar"></div>
+      <div class="glyph-metrics-panel" id="glyphMetricsPanel">
+        <div class="glyph-metrics-info" id="glyphMetricsInfo">
+          <div class="glyph-metrics-info-item"><span class="dot" style="background:#e74c3c"></span> Glyph name</div>
+          <div class="glyph-metrics-info-item"><span class="dot" style="background:#3498db"></span> Unicode</div>
+        </div>
+        <div class="glyph-metrics-canvas-wrap">
+          <canvas id="glyphMetricsCanvas" width="380" height="400"></canvas>
+        </div>
+        <div class="glyph-metrics-details" id="glyphMetricsDetails"></div>
+      </div>
       <div class="glyph-main" id="glyphMain"></div>
     </div>
   </div>
 
-  <!-- GLYPH DETAIL OVERLAY -->
-  <div class="glyph-detail-overlay" id="glyphDetailOverlay" onclick="if(event.target===this)closeGlyphDetail()">
-    <div class="glyph-detail-card">
-      <button class="glyph-detail-close" onclick="closeGlyphDetail()">✕</button>
-      <div class="glyph-detail-char" id="glyphDetailChar"></div>
-      <div class="glyph-detail-info">
-        <span class="glyph-detail-name" id="glyphDetailName"></span>
-        <span id="glyphDetailUnicode"></span>
-        <span id="glyphDetailHex"></span>
-        <span id="glyphDetailHtml"></span>
-      </div>
-    </div>
-  </div>
+  <!-- GLYPH DETAIL OVERLAY (removed - using left metrics panel instead) -->
 
   <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
   <script>
@@ -1187,11 +1156,20 @@
 
     // Store font binary data for opentype.js parsing
     let fontBlobCache = new Map();
-
     let currentGlyphFont = '';
+    let currentOTFont = null; // opentype.js font object for metrics
+    let selectedGlyphCP = null;
+
+    function goHome() {
+      if (document.getElementById('glyphView').classList.contains('active')) {
+        hideGlyphView();
+      }
+    }
 
     async function showGlyphView(family, styleCount) {
       currentGlyphFont = family;
+      currentOTFont = null;
+      selectedGlyphCP = null;
       const glyphView = document.getElementById('glyphView');
       const app = document.getElementById('app');
       const toolbar = document.querySelector('.toolbar');
@@ -1202,9 +1180,8 @@
 
       // Show loading state
       const main = document.getElementById('glyphMain');
-      const sidebar = document.getElementById('glyphSidebar');
-      sidebar.innerHTML = '<div style="padding:20px;color:var(--text-secondary);font-size:13px">Loading...</div>';
       main.innerHTML = '<div class="loading"><div class="spinner"></div><div class="loading-text">Parsing font glyphs...</div></div>';
+      drawMetricsPlaceholder();
 
       app.style.display = 'none';
       toolbar.style.display = 'none';
@@ -1212,46 +1189,40 @@
 
       // Get font binary and parse with opentype.js
       try {
-        const supportedCPs = await getFontCodepoints(family);
-        if (supportedCPs.length === 0) {
+        const { cps, font } = await getFontCodepointsAndFont(family);
+        currentOTFont = font;
+        if (cps.length === 0) {
           main.innerHTML = '<div style="text-align:center;padding:80px;color:var(--text-secondary)">Could not read glyph data for this font.</div>';
-          sidebar.innerHTML = '';
           return;
         }
 
         // Group by Unicode block
         const blockMap = new Map();
-        for (const cp of supportedCPs) {
-          if (cp < 0x0020) continue; // skip control chars
+        for (const cp of cps) {
+          if (cp < 0x0020) continue;
           const blockName = getBlockName(cp);
           if (!blockMap.has(blockName)) blockMap.set(blockName, []);
           blockMap.get(blockName).push(cp);
         }
 
-        // Sort blocks by their first codepoint
         const blocks = Array.from(blockMap.entries())
           .map(([name, cps]) => ({ name, cps: cps.sort((a, b) => a - b) }))
           .sort((a, b) => a.cps[0] - b.cps[0]);
 
-        // Build sidebar
-        sidebar.innerHTML = blocks.map((b, i) =>
-          `<button class="glyph-block-btn ${i === 0 ? 'active' : ''}" data-block="${i}" onclick="scrollToBlock(${i})">${b.name} <span style="opacity:0.5;font-size:11px">(${b.cps.length})</span></button>`
-        ).join('');
-
-        // Build glyph grid
         renderGlyphGridFromBlocks(family, blocks);
-        setupBlockObserver();
+
+        // Auto-select first glyph (capital A if available, else first)
+        const firstCP = cps.includes(0x0041) ? 0x0041 : (cps.find(c => c >= 0x0020) || cps[0]);
+        selectGlyph(firstCP, family);
       } catch (e) {
         console.error('Glyph parse error:', e);
         main.innerHTML = '<div style="text-align:center;padding:80px;color:var(--text-secondary)">Failed to parse font data.</div>';
-        sidebar.innerHTML = '';
       }
     }
 
-    async function getFontCodepoints(family) {
+    async function getFontCodepointsAndFont(family) {
       let arrayBuffer = null;
 
-      // Try Local Font Access API first
       if ('queryLocalFonts' in window) {
         try {
           const fonts = await window.queryLocalFonts();
@@ -1263,29 +1234,174 @@
         } catch (e) { /* fall through */ }
       }
 
-      // Try cached blob from file picker
       if (!arrayBuffer && fontBlobCache.has(family)) {
         arrayBuffer = fontBlobCache.get(family);
       }
 
-      if (!arrayBuffer) return [];
+      if (!arrayBuffer) return { cps: [], font: null };
 
       const font = opentype.parse(arrayBuffer);
       const cps = [];
-      // Read all glyphs and collect their unicode values
       for (let i = 0; i < font.glyphs.length; i++) {
         const glyph = font.glyphs.get(i);
         if (glyph.unicode !== undefined && glyph.unicode !== null) {
           cps.push(glyph.unicode);
         }
-        // Some glyphs have multiple unicodes
         if (glyph.unicodes && glyph.unicodes.length > 1) {
           for (const u of glyph.unicodes) {
             if (u !== glyph.unicode) cps.push(u);
           }
         }
       }
-      return [...new Set(cps)];
+      return { cps: [...new Set(cps)], font };
+    }
+
+    function selectGlyph(cp, family) {
+      selectedGlyphCP = cp;
+      // Highlight in grid
+      document.querySelectorAll('.glyph-cell').forEach(c => c.classList.remove('glyph-selected'));
+      const target = document.querySelector(`.glyph-cell[data-cp="${cp}"]`);
+      if (target) target.classList.add('glyph-selected');
+
+      // Update metrics info bar
+      const hex = cp.toString(16).toUpperCase().padStart(4, '0');
+      const ch = String.fromCodePoint(cp);
+      const glyphName = getUnicodeName(cp);
+      document.getElementById('glyphMetricsInfo').innerHTML = `
+        <div class="glyph-metrics-info-item"><span class="dot" style="background:#e74c3c"></span> ${glyphName}</div>
+        <div class="glyph-metrics-info-item"><span class="dot" style="background:#3498db"></span> U+${hex}</div>
+      `;
+
+      // Draw metrics canvas
+      drawGlyphMetrics(cp, family);
+
+      // Update details
+      const details = document.getElementById('glyphMetricsDetails');
+      if (currentOTFont) {
+        const glyph = currentOTFont.charToGlyph(ch);
+        const unitsPerEm = currentOTFont.unitsPerEm;
+        const ascender = currentOTFont.ascender;
+        const descender = currentOTFont.descender;
+        const xHeight = currentOTFont.tables.os2 ? currentOTFont.tables.os2.sxHeight : '—';
+        const capHeight = currentOTFont.tables.os2 ? currentOTFont.tables.os2.sCapHeight : '—';
+        const advWidth = glyph.advanceWidth || 0;
+        const bbox = glyph.getBoundingBox ? glyph.getBoundingBox() : null;
+
+        details.innerHTML = `
+          <span><span class="label">Unicode</span><span class="value">U+${hex}</span></span>
+          <span><span class="label">Decimal</span><span class="value">${cp}</span></span>
+          <span><span class="label">Units/Em</span><span class="value">${unitsPerEm}</span></span>
+          <span><span class="label">Advance Width</span><span class="value">${advWidth}</span></span>
+          <span><span class="label">Ascender</span><span class="value">${ascender}</span></span>
+          <span><span class="label">Descender</span><span class="value">${descender}</span></span>
+          <span><span class="label">Cap Height</span><span class="value">${capHeight || '—'}</span></span>
+          <span><span class="label">x-Height</span><span class="value">${xHeight || '—'}</span></span>
+          ${bbox ? `<span><span class="label">Bbox</span><span class="value">${Math.round(bbox.x1)}, ${Math.round(bbox.y1)}, ${Math.round(bbox.x2)}, ${Math.round(bbox.y2)}</span></span>` : ''}
+          <span><span class="label">Glyph Index</span><span class="value">${glyph.index}</span></span>
+        `;
+      }
+    }
+
+    function drawMetricsPlaceholder() {
+      const canvas = document.getElementById('glyphMetricsCanvas');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = 380 * dpr;
+      canvas.height = 400 * dpr;
+      canvas.style.width = '380px';
+      canvas.style.height = '400px';
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, 380, 400);
+      ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-secondary');
+      ctx.font = '14px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Select a glyph', 190, 200);
+    }
+
+    function drawGlyphMetrics(cp, family) {
+      const canvas = document.getElementById('glyphMetricsCanvas');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const W = 380, H = 400;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.scale(dpr, dpr);
+
+      const isDark = document.body.classList.contains('dark');
+      const bgColor = isDark ? '#1a1a1a' : '#f5f5f0';
+      const textColor = isDark ? '#f0f0eb' : '#1a1a1a';
+      const lineColor = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
+      const labelColor = isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)';
+
+      ctx.clearRect(0, 0, W, H);
+
+      if (!currentOTFont) return;
+
+      const ch = String.fromCodePoint(cp);
+      const glyph = currentOTFont.charToGlyph(ch);
+      const unitsPerEm = currentOTFont.unitsPerEm;
+      const ascender = currentOTFont.ascender;
+      const descender = currentOTFont.descender;
+      const os2 = currentOTFont.tables.os2;
+      const capHeight = os2 ? (os2.sCapHeight || ascender) : ascender;
+      const xHeight = os2 ? (os2.sxHeight || Math.round(ascender * 0.5)) : Math.round(ascender * 0.5);
+
+      // Scale to fit canvas
+      const totalHeight = ascender - descender;
+      const scale = (H - 80) / totalHeight;
+      const baselineY = 40 + ascender * scale;
+      const leftPad = 60;
+
+      // Metric lines
+      const metrics = [
+        { name: 'Ascender', y: baselineY - ascender * scale, color: '#e74c3c' },
+        { name: 'Cap height', y: baselineY - capHeight * scale, color: '#e67e22' },
+        { name: 'x-height', y: baselineY - xHeight * scale, color: '#2ecc71' },
+        { name: 'Baseline', y: baselineY, color: '#3498db' },
+        { name: 'Descender', y: baselineY - descender * scale, color: '#9b59b6' },
+      ];
+
+      // Draw metric lines
+      ctx.font = '10px -apple-system, sans-serif';
+      for (const m of metrics) {
+        ctx.strokeStyle = m.color;
+        ctx.globalAlpha = 0.5;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(leftPad - 5, m.y);
+        ctx.lineTo(W, m.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 0.7;
+        ctx.fillStyle = m.color;
+        ctx.textAlign = 'right';
+        ctx.fillText(m.name, leftPad - 10, m.y + 3);
+      }
+      ctx.globalAlpha = 1;
+
+      // Draw glyph using opentype.js path
+      const glyphScale = scale;
+      const path = glyph.getPath(leftPad + 40, baselineY, unitsPerEm * glyphScale);
+      ctx.fillStyle = textColor;
+      ctx.globalAlpha = 0.85;
+
+      // Convert opentype path to canvas
+      const cmds = path.commands;
+      ctx.beginPath();
+      for (const cmd of cmds) {
+        switch (cmd.type) {
+          case 'M': ctx.moveTo(cmd.x, cmd.y); break;
+          case 'L': ctx.lineTo(cmd.x, cmd.y); break;
+          case 'Q': ctx.quadraticCurveTo(cmd.x1, cmd.y1, cmd.x, cmd.y); break;
+          case 'C': ctx.bezierCurveTo(cmd.x1, cmd.y1, cmd.x2, cmd.y2, cmd.x, cmd.y); break;
+          case 'Z': ctx.closePath(); break;
+        }
+      }
+      ctx.fill();
+      ctx.globalAlpha = 1;
     }
 
     function renderGlyphGridFromBlocks(family, blocks) {
@@ -1297,7 +1413,7 @@
         for (const cp of block.cps) {
           const ch = String.fromCodePoint(cp);
           const hex = cp.toString(16).toUpperCase().padStart(4, '0');
-          html += `<div class="glyph-cell" onclick="showGlyphDetail(${cp}, '${escapedFamily}')">
+          html += `<div class="glyph-cell" data-cp="${cp}" onclick="selectGlyph(${cp}, '${escapedFamily}')">
             <span class="glyph-char" style="font-family:'${family}',sans-serif">${ch}</span>
             <span class="glyph-code">U+${hex}</span>
           </div>`;
@@ -1307,33 +1423,12 @@
       main.innerHTML = html;
     }
 
-    function scrollToBlock(index) {
-      const el = document.getElementById(`glyph-block-${index}`);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      document.querySelectorAll('.glyph-block-btn').forEach((b, i) => b.classList.toggle('active', i === index));
-    }
-
-    let blockObserver = null;
-    function setupBlockObserver() {
-      if (blockObserver) blockObserver.disconnect();
-      const main = document.getElementById('glyphMain');
-      const blocks = main.querySelectorAll('[id^="glyph-block-"]');
-      blockObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const idx = entry.target.id.replace('glyph-block-', '');
-            document.querySelectorAll('.glyph-block-btn').forEach((b, i) => b.classList.toggle('active', i === parseInt(idx)));
-          }
-        });
-      }, { root: main, threshold: 0.1 });
-      blocks.forEach(b => blockObserver.observe(b));
-    }
-
     function hideGlyphView() {
       document.getElementById('glyphView').classList.remove('active');
       document.getElementById('app').style.display = '';
       document.querySelector('.toolbar').style.display = '';
-      if (blockObserver) blockObserver.disconnect();
+      currentOTFont = null;
+      selectedGlyphCP = null;
     }
 
     // ---- Glyph detail ----
@@ -1347,26 +1442,17 @@
     }
 
     function showGlyphDetail(codepoint, family) {
-      const ch = String.fromCodePoint(codepoint);
-      const hex = codepoint.toString(16).toUpperCase().padStart(4, '0');
-      document.getElementById('glyphDetailChar').textContent = ch;
-      document.getElementById('glyphDetailChar').style.fontFamily = `'${family}', sans-serif`;
-      document.getElementById('glyphDetailName').textContent = getUnicodeName(codepoint);
-      document.getElementById('glyphDetailUnicode').textContent = `Unicode: U+${hex}`;
-      document.getElementById('glyphDetailHex').textContent = `Decimal: ${codepoint}`;
-      document.getElementById('glyphDetailHtml').textContent = `HTML: &#${codepoint};`;
-      document.getElementById('glyphDetailOverlay').classList.add('active');
+      // Now handled by selectGlyph + left metrics panel
+      selectGlyph(codepoint, family);
     }
 
     function closeGlyphDetail() {
-      document.getElementById('glyphDetailOverlay').classList.remove('active');
+      // No-op, overlay removed
     }
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        if (document.getElementById('glyphDetailOverlay').classList.contains('active')) {
-          closeGlyphDetail();
-        } else if (document.getElementById('glyphView').classList.contains('active')) {
+        if (document.getElementById('glyphView').classList.contains('active')) {
           hideGlyphView();
         }
       }
