@@ -725,6 +725,86 @@
       50% { transform: scale(1.4); }
       100% { transform: scale(1); }
     }
+
+    /* Info button & tooltip */
+    .card { position: relative; }
+
+    .card-info-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: var(--text-secondary);
+      opacity: 0;
+      transition: opacity 0.2s, background 0.15s;
+      z-index: 5;
+    }
+
+    .card:hover .card-info-btn { opacity: 1; }
+    .card-info-btn:hover { background: var(--hover-bg); color: var(--text); }
+
+    .card-info-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .font-tooltip {
+      display: none;
+      position: absolute;
+      top: 40px;
+      right: 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      min-width: 200px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      z-index: 10;
+      font-size: 12px;
+      line-height: 1.8;
+      color: var(--text);
+      pointer-events: none;
+    }
+
+    .card-info-btn:hover + .font-tooltip,
+    .font-tooltip:hover {
+      display: block;
+    }
+
+    .font-tooltip .tt-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .font-tooltip .tt-label {
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .font-tooltip .tt-value {
+      font-weight: 500;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .font-tooltip .tt-loading {
+      color: var(--text-secondary);
+      text-align: center;
+      padding: 8px 0;
+    }
 </style>
 </head>
 <body>
@@ -1086,6 +1166,10 @@
         const escapedFamily = f.family.replace(/'/g, "\\'");
         return `
         <div class="card" style="animation-delay:${Math.min(i * 20, 400)}ms" onclick="handleCardClick('${escapedFamily}')" ondblclick="handleCardDblClick(event, '${escapedFamily}', ${f.styleCount})">
+          <button class="card-info-btn" onclick="event.stopPropagation()" onmouseenter="loadFontInfo(this, '${escapedFamily}')">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </button>
+          <div class="font-tooltip" id="tt-${i}"><div class="tt-loading">Loading...</div></div>
           <div class="card-preview align-${textAlign}" style="font-family:'${f.family}',sans-serif;font-size:${fontSize}px">
             ${getPreviewText(f, i)}
           </div>
@@ -1102,6 +1186,68 @@
           </div>
         </div>`;
       }).join('')}</div>`;
+    }
+
+    // ---- Font info tooltip ----
+    const fontInfoCache = new Map();
+
+    async function loadFontInfo(btn, family) {
+      const tooltip = btn.nextElementSibling;
+      if (fontInfoCache.has(family)) {
+        tooltip.innerHTML = fontInfoCache.get(family);
+        return;
+      }
+
+      let arrayBuffer = null;
+      // Try Local Font Access API
+      if ('queryLocalFonts' in window) {
+        try {
+          const fonts = await window.queryLocalFonts();
+          const match = fonts.find(f => f.family === family);
+          if (match) {
+            const blob = await match.blob();
+            arrayBuffer = await blob.arrayBuffer();
+          }
+        } catch (e) { /* fall through */ }
+      }
+      // Try cached blob
+      if (!arrayBuffer && fontBlobCache.has(family)) {
+        arrayBuffer = fontBlobCache.get(family);
+      }
+
+      if (!arrayBuffer) {
+        const html = '<div class="tt-loading">Unable to read font data</div>';
+        tooltip.innerHTML = html;
+        fontInfoCache.set(family, html);
+        return;
+      }
+
+      try {
+        const font = opentype.parse(arrayBuffer);
+        const name = font.names;
+        const os2 = font.tables.os2;
+        const head = font.tables.head;
+        const version = (name.version && name.version.en) || (head ? `${head.fontRevision.toFixed(1)}` : '—');
+        const format = head && head.magicNumber === 0x5F0F3CF5 ? 'TrueType / OpenType' : 'OpenType';
+        const glyphCount = font.glyphs.length;
+        const unitsPerEm = font.unitsPerEm;
+        const designer = (name.designer && name.designer.en) || '—';
+        const license = (name.license && name.license.en) || '—';
+
+        const html = `
+          <div class="tt-row"><span class="tt-label">格式</span><span class="tt-value">${format}</span></div>
+          <div class="tt-row"><span class="tt-label">字形数</span><span class="tt-value">${glyphCount.toLocaleString()}</span></div>
+          <div class="tt-row"><span class="tt-label">Units/Em</span><span class="tt-value">${unitsPerEm}</span></div>
+          <div class="tt-row"><span class="tt-label">版本</span><span class="tt-value">${version}</span></div>
+          <div class="tt-row"><span class="tt-label">设计师</span><span class="tt-value" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${designer}</span></div>
+        `;
+        tooltip.innerHTML = html;
+        fontInfoCache.set(family, html);
+      } catch (e) {
+        const html = '<div class="tt-loading">Parse error</div>';
+        tooltip.innerHTML = html;
+        fontInfoCache.set(family, html);
+      }
     }
 
     // ---- Single click / double click handling ----
