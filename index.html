@@ -1799,12 +1799,15 @@
     const LOGO_FONT_SIZE = 48;
     let logoPathData = null;
     let logoSvgReady = false;
-    let logoHoverActive = false;
     let logoDragging = null;
     let logoAnimFrame = null;
     let logoShowNodes = 0;
     let logoSpringFrame = null;
+    let logoFixedVB = null; // fixed viewBox, computed once
+    let logoMouseSvg = null; // mouse position in SVG coords
+    let logoSelectedSeg = null; // currently dragged segment index
     const LOGO_FONT_URL = 'https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.ttf';
+    const LOGO_NODE_RADIUS = 80; // proximity radius in SVG units to show nodes
 
     async function initLogo() {
       try {
@@ -1813,14 +1816,26 @@
         const font = opentype.parse(buf);
         const path = font.getPath(LOGO_TEXT, 0, LOGO_FONT_SIZE * 0.78, LOGO_FONT_SIZE);
         buildLogoPathData(path.commands);
+        // Compute fixed viewBox from original path
+        let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+        for (const c of logoPathData) {
+          for (const k of ['x','y','x1','y1','x2','y2']) {
+            if (c[k]===undefined) continue;
+            if (k.startsWith('x')) { minX=Math.min(minX,c[k]); maxX=Math.max(maxX,c[k]); }
+            else { minY=Math.min(minY,c[k]); maxY=Math.max(maxY,c[k]); }
+          }
+        }
+        const pad=6;
+        logoFixedVB = { x: minX-pad, y: minY-pad, w: (maxX-minX)+pad*2, h: (maxY-minY)+pad*2 };
         renderLogoSvg();
         logoSvgReady = true;
       } catch (e) {
+        console.warn('Logo init error:', e);
         const svg = document.getElementById('logoSvg');
         svg.innerHTML = `<text x="0" y="38" font-size="48" font-weight="700" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" fill="currentColor">${LOGO_TEXT}</text>`;
         const bbox = svg.getBBox();
-        svg.setAttribute('width', Math.ceil(bbox.width + 4));
-        svg.setAttribute('height', Math.ceil(bbox.height + 4));
+        svg.setAttribute('width', Math.ceil(bbox.width+4));
+        svg.setAttribute('height', Math.ceil(bbox.height+4));
         svg.setAttribute('viewBox', `${bbox.x-2} ${bbox.y-2} ${bbox.width+4} ${bbox.height+4}`);
       }
     }
@@ -1841,65 +1856,86 @@
     function logoPathToD() {
       return logoPathData.map(c => {
         switch (c.type) {
-          case 'M': return `M${c.x.toFixed(1)} ${c.y.toFixed(1)}`;
-          case 'L': return `L${c.x.toFixed(1)} ${c.y.toFixed(1)}`;
-          case 'Q': return `Q${c.x1.toFixed(1)} ${c.y1.toFixed(1)} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`;
-          case 'C': return `C${c.x1.toFixed(1)} ${c.y1.toFixed(1)} ${c.x2.toFixed(1)} ${c.y2.toFixed(1)} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`;
+          case 'M': return `M${c.x.toFixed(2)} ${c.y.toFixed(2)}`;
+          case 'L': return `L${c.x.toFixed(2)} ${c.y.toFixed(2)}`;
+          case 'Q': return `Q${c.x1.toFixed(2)} ${c.y1.toFixed(2)} ${c.x.toFixed(2)} ${c.y.toFixed(2)}`;
+          case 'C': return `C${c.x1.toFixed(2)} ${c.y1.toFixed(2)} ${c.x2.toFixed(2)} ${c.y2.toFixed(2)} ${c.x.toFixed(2)} ${c.y.toFixed(2)}`;
           case 'Z': return 'Z';
           default: return '';
         }
       }).join('');
     }
 
+    function distToMouse(px, py) {
+      if (!logoMouseSvg) return Infinity;
+      const dx = px - logoMouseSvg.x, dy = py - logoMouseSvg.y;
+      return Math.sqrt(dx*dx + dy*dy);
+    }
+
     function renderLogoSvg() {
-      if (!logoPathData) return;
+      if (!logoPathData || !logoFixedVB) return;
       const svg = document.getElementById('logoSvg');
       const isDark = document.body.classList.contains('dark');
       const fillColor = isDark ? '#f0f0eb' : '#1a1a1a';
-      const handleColor = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)';
-      const nodeStroke = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.45)';
-      const nodeFill = isDark ? '#1a1a1a' : '#ffffff';
-      const handleDotFill = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)';
+      const accentBlue = '#2D7FF9';
+      const handleLineColor = 'rgba(45,127,249,0.5)';
       const d = logoPathToD();
 
-      let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
-      for (const c of logoPathData) {
-        for (const k of ['x','y','x1','y1','x2','y2']) {
-          if (c[k]===undefined) continue;
-          if (k.startsWith('x')) { minX=Math.min(minX,c[k]); maxX=Math.max(maxX,c[k]); }
-          else { minY=Math.min(minY,c[k]); maxY=Math.max(maxY,c[k]); }
-        }
-      }
-      const pad=8;
-      const vbW=(maxX-minX)+pad*2, vbH=(maxY-minY)+pad*2;
-      const scale=(LOGO_FONT_SIZE+12)/vbH;
-      svg.setAttribute('width', Math.ceil(vbW*scale));
-      svg.setAttribute('height', Math.ceil(vbH*scale));
-      svg.setAttribute('viewBox', `${minX-pad} ${minY-pad} ${vbW} ${vbH}`);
+      // Fixed viewBox — never changes
+      const vb = logoFixedVB;
+      const targetH = LOGO_FONT_SIZE + 12;
+      const scale = targetH / vb.h;
+      svg.setAttribute('width', Math.ceil(vb.w * scale));
+      svg.setAttribute('height', Math.ceil(vb.h * scale));
+      svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
 
       const op = logoShowNodes;
       let html = `<path d="${d}" fill="${fillColor}"/>`;
 
       if (op > 0.01) {
-        html += `<path d="${d}" fill="none" stroke="${fillColor}" stroke-width="0.5" opacity="${op*0.25}"/>`;
         let px=0, py=0;
-        const ns=1.6, hr=1.0;
+        const anchorR = 2.2;
+        const handleR = 1.6;
+
         for (let i=0; i<logoPathData.length; i++) {
           const c = logoPathData[i];
-          if (c.type==='Q') {
-            html += `<line x1="${px}" y1="${py}" x2="${c.x1}" y2="${c.y1}" stroke="${handleColor}" stroke-width="0.5" opacity="${op}"/>`;
-            html += `<line x1="${c.x1}" y1="${c.y1}" x2="${c.x}" y2="${c.y}" stroke="${handleColor}" stroke-width="0.5" opacity="${op}"/>`;
-            html += `<circle cx="${c.x1}" cy="${c.y1}" r="${hr}" fill="${handleDotFill}" opacity="${op}" data-seg="${i}" data-prop="x1y1" class="logo-handle" style="cursor:grab"/>`;
+          const isSelected = (logoSelectedSeg === i);
+
+          // Proximity check — only show nodes near mouse
+          let nearMouse = false;
+          if (c.x !== undefined) nearMouse = nearMouse || distToMouse(c.x, c.y) < LOGO_NODE_RADIUS;
+          if (c.x1 !== undefined) nearMouse = nearMouse || distToMouse(c.x1, c.y1) < LOGO_NODE_RADIUS;
+          if (c.x2 !== undefined) nearMouse = nearMouse || distToMouse(c.x2, c.y2) < LOGO_NODE_RADIUS;
+          // Also show if this segment is being dragged
+          if (logoDragging && logoDragging.segIdx === i) nearMouse = true;
+
+          const segOp = nearMouse ? op : 0;
+
+          if (segOp > 0.01) {
+            if (c.type==='Q') {
+              html += `<line x1="${px}" y1="${py}" x2="${c.x1}" y2="${c.y1}" stroke="${handleLineColor}" stroke-width="0.4" opacity="${segOp}"/>`;
+              html += `<line x1="${c.x1}" y1="${c.y1}" x2="${c.x}" y2="${c.y}" stroke="${handleLineColor}" stroke-width="0.4" opacity="${segOp}"/>`;
+              html += `<circle cx="${c.x1}" cy="${c.y1}" r="${handleR}" fill="${accentBlue}" opacity="${segOp}" data-seg="${i}" data-prop="x1y1" style="cursor:grab"/>`;
+            }
+            if (c.type==='C') {
+              html += `<line x1="${px}" y1="${py}" x2="${c.x1}" y2="${c.y1}" stroke="${handleLineColor}" stroke-width="0.4" opacity="${segOp}"/>`;
+              html += `<circle cx="${c.x1}" cy="${c.y1}" r="${handleR}" fill="${accentBlue}" opacity="${segOp}" data-seg="${i}" data-prop="x1y1" style="cursor:grab"/>`;
+              html += `<line x1="${c.x}" y1="${c.y}" x2="${c.x2}" y2="${c.y2}" stroke="${handleLineColor}" stroke-width="0.4" opacity="${segOp}"/>`;
+              html += `<circle cx="${c.x2}" cy="${c.y2}" r="${handleR}" fill="${accentBlue}" opacity="${segOp}" data-seg="${i}" data-prop="x2y2" style="cursor:grab"/>`;
+            }
+            // Anchor point (on-curve) — blue filled circle
+            if (c.x!==undefined && c.type!=='Z') {
+              html += `<circle cx="${c.x}" cy="${c.y}" r="${anchorR}" fill="${accentBlue}" stroke="#fff" stroke-width="0.4" opacity="${segOp}" data-seg="${i}" data-prop="xy" style="cursor:grab"/>`;
+            }
+            // Coordinate label on dragged node
+            if (isSelected && logoDragging) {
+              const lx = c.x !== undefined ? c.x : (c.x1 || 0);
+              const ly = c.y !== undefined ? c.y : (c.y1 || 0);
+              html += `<text x="${lx + 4}" y="${ly + 10}" font-size="5" font-family="-apple-system,sans-serif" fill="${accentBlue}" opacity="${segOp}">X: ${Math.round(lx)}</text>`;
+              html += `<text x="${lx + 4}" y="${ly + 16}" font-size="5" font-family="-apple-system,sans-serif" fill="${accentBlue}" opacity="${segOp}">Y: ${Math.round(ly)}</text>`;
+            }
           }
-          if (c.type==='C') {
-            html += `<line x1="${px}" y1="${py}" x2="${c.x1}" y2="${c.y1}" stroke="${handleColor}" stroke-width="0.5" opacity="${op}"/>`;
-            html += `<circle cx="${c.x1}" cy="${c.y1}" r="${hr}" fill="${handleDotFill}" opacity="${op}" data-seg="${i}" data-prop="x1y1" class="logo-handle" style="cursor:grab"/>`;
-            html += `<line x1="${c.x}" y1="${c.y}" x2="${c.x2}" y2="${c.y2}" stroke="${handleColor}" stroke-width="0.5" opacity="${op}"/>`;
-            html += `<circle cx="${c.x2}" cy="${c.y2}" r="${hr}" fill="${handleDotFill}" opacity="${op}" data-seg="${i}" data-prop="x2y2" class="logo-handle" style="cursor:grab"/>`;
-          }
-          if (c.x!==undefined && c.type!=='Z') {
-            html += `<rect x="${c.x-ns}" y="${c.y-ns}" width="${ns*2}" height="${ns*2}" fill="${nodeFill}" stroke="${nodeStroke}" stroke-width="0.5" opacity="${op}" data-seg="${i}" data-prop="xy" class="logo-anchor" style="cursor:grab"/>`;
-          }
+
           if (c.x!==undefined) { px=c.x; py=c.y; }
         }
       }
@@ -1912,7 +1948,7 @@
       function tick() {
         const diff = target - logoShowNodes;
         if (Math.abs(diff) < 0.02) { logoShowNodes=target; renderLogoSvg(); logoAnimFrame=null; return; }
-        logoShowNodes += diff * 0.15;
+        logoShowNodes += diff * 0.18;
         renderLogoSvg();
         logoAnimFrame = requestAnimationFrame(tick);
       }
@@ -1935,6 +1971,7 @@
       const prop = el.dataset.prop;
       const coords = logoSvgCoords(e);
       const c = logoPathData[segIdx];
+      logoSelectedSeg = segIdx;
       logoDragging = { segIdx, prop, startX: coords.x, startY: coords.y };
       if (prop==='xy') { logoDragging.origX=c.x; logoDragging.origY=c.y; }
       else if (prop==='x1y1') { logoDragging.origX=c.x1; logoDragging.origY=c.y1; }
@@ -1957,8 +1994,10 @@
 
     function onLogoPointerUp() {
       logoDragging = null;
+      logoSelectedSeg = null;
       document.removeEventListener('pointermove', onLogoPointerMove);
       document.removeEventListener('pointerup', onLogoPointerUp);
+      renderLogoSvg();
     }
 
     function springBackLogo() {
@@ -1990,14 +2029,21 @@
     const logoEl = document.querySelector('.logo');
     const logoSvg = document.getElementById('logoSvg');
 
+    // Track mouse position for proximity-based node display
+    logoEl.addEventListener('mousemove', (e) => {
+      if (!logoSvgReady) return;
+      logoMouseSvg = logoSvgCoords(e);
+      if (logoShowNodes > 0.5) renderLogoSvg();
+    });
+
     logoEl.addEventListener('mouseenter', () => {
-      logoHoverActive = true;
       if (logoSpringFrame) { cancelAnimationFrame(logoSpringFrame); logoSpringFrame=null; }
       animateLogoNodes(true);
     });
     logoEl.addEventListener('mouseleave', () => {
-      logoHoverActive = false;
+      logoMouseSvg = null;
       logoDragging = null;
+      logoSelectedSeg = null;
       document.removeEventListener('pointermove', onLogoPointerMove);
       document.removeEventListener('pointerup', onLogoPointerUp);
       animateLogoNodes(false);
