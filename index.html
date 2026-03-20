@@ -557,7 +557,7 @@
 
     .glyph-body {
       display: flex;
-      height: calc(100vh - 90px);
+      min-height: calc(100vh - 90px);
     }
 
     /* Left metrics panel */
@@ -568,6 +568,7 @@
       display: flex;
       flex-direction: column;
       background: var(--bg);
+      overflow-y: auto;
     }
 
     .glyph-metrics-info {
@@ -600,12 +601,12 @@
       justify-content: center;
       position: relative;
       overflow: hidden;
-      padding: 40px 20px;
+      padding: 40px 40px;
+      min-height: 500px;
     }
 
     .glyph-metrics-canvas-wrap canvas {
       max-width: 100%;
-      max-height: 100%;
     }
 
     .glyph-metrics-details {
@@ -893,6 +894,7 @@
       <div class="preview-tabs">
         <button class="preview-tab" data-mode="cities" onclick="setPreviewMode('cities')">Cities</button>
         <button class="preview-tab" data-mode="excerpts" onclick="setPreviewMode('excerpts')">Excerpts</button>
+        <button class="preview-tab" data-mode="numbers" onclick="setPreviewMode('numbers')">Numbers</button>
         <button class="preview-tab active" data-mode="names" onclick="setPreviewMode('names')">Names</button>
       </div>
 
@@ -1035,6 +1037,7 @@
       switch (previewMode) {
         case 'cities': return CITIES[index % CITIES.length];
         case 'excerpts': return EXCERPTS[index % EXCERPTS.length];
+        case 'numbers': return '0123456789';
         case 'names': default: return font.family;
       }
     }
