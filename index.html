@@ -996,14 +996,53 @@
       return 'sans-serif';
     }
 
+    // ---- Script-specific preview text for non-Latin fonts ----
+    const SCRIPT_PREVIEWS = [
+      { pattern: /bengali/i, text: 'আমার সোনার বাংলা আমি তোমায় ভালোবাসি' },
+      { pattern: /devanagari|hindi/i, text: 'अनेकता में एकता भारत की विशेषता है' },
+      { pattern: /arabic/i, text: 'الخط العربي فن جميل وعريق' },
+      { pattern: /hebrew/i, text: 'שלום עולם, זהו טקסט לדוגמה' },
+      { pattern: /thai/i, text: 'สวัสดีครับ นี่คือตัวอย่างข้อความ' },
+      { pattern: /tamil/i, text: 'தமிழ் மொழி மிகவும் அழகானது' },
+      { pattern: /telugu/i, text: 'తెలుగు భాష చాలా అందమైనది' },
+      { pattern: /kannada/i, text: 'ಕನ್ನಡ ಭಾಷೆ ತುಂಬಾ ಸುಂದರವಾಗಿದೆ' },
+      { pattern: /malayalam/i, text: 'മലയാളം ഭാഷ വളരെ മനോഹരമാണ്' },
+      { pattern: /gujarati/i, text: 'ગુજરાતી ભાષા ખૂબ સુંદર છે' },
+      { pattern: /gurmukhi|punjabi/i, text: 'ਪੰਜਾਬੀ ਭਾਸ਼ਾ ਬਹੁਤ ਸੁੰਦਰ ਹੈ' },
+      { pattern: /oriya|odia/i, text: 'ଓଡ଼ିଆ ଭାଷା ବହୁତ ସୁନ୍ଦର' },
+      { pattern: /sinhala/i, text: 'සිංහල භාෂාව ඉතා සුන්දරයි' },
+      { pattern: /myanmar|burmese/i, text: 'မြန်မာဘာသာစကား လှပပါသည်' },
+      { pattern: /khmer|cambodian/i, text: 'ភាសាខ្មែរគឺស្រស់ស្អាតណាស់' },
+      { pattern: /lao/i, text: 'ພາສາລາວງາມຫຼາຍ' },
+      { pattern: /tibetan/i, text: 'བོད་སྐད་ནི་ཧ་ཅང་མཛེས་པོ་རེད' },
+      { pattern: /georgian/i, text: 'ქართული ენა ძალიან ლამაზია' },
+      { pattern: /armenian/i, text: 'Հայերեն լdelays շատ գեղեdelays է' },
+      { pattern: /ethiopic|amharic/i, text: 'አማርኛ ቋንቋ በጣም ቆንጆ ነው' },
+      { pattern: /hangul|korean/i, text: '한글은 매우 아름다운 문자입니다' },
+      { pattern: /kana|japanese|jp/i, text: 'あいうえお カキクケコ 日本語フォント' },
+      { pattern: /\b(sc|cn|chinese|cjk|hans)\b/i, text: '中文字体预览 永远相信美好的事情即将发生' },
+      { pattern: /\b(tc|tw|hant)\b/i, text: '中文字體預覽 永遠相信美好的事情即將發生' },
+      { pattern: /greek/i, text: 'Ελληνικά γράμματα είναι πολύ όμορφα' },
+      { pattern: /cyrillic|russian/i, text: 'Кириллица очень красивый шрифт' },
+    ];
+
+    function getScriptPreview(family) {
+      for (const s of SCRIPT_PREVIEWS) {
+        if (s.pattern.test(family)) return s.text;
+      }
+      return null;
+    }
+
     // ---- Get preview text ----
     function getPreviewText(font, index) {
       if (customText) return customText;
+      // Check if font needs script-specific preview
+      const scriptText = getScriptPreview(font.family);
       switch (previewMode) {
-        case 'cities': return CITIES[index % CITIES.length];
-        case 'excerpts': return EXCERPTS[index % EXCERPTS.length];
+        case 'cities': return scriptText || CITIES[index % CITIES.length];
+        case 'excerpts': return scriptText || EXCERPTS[index % EXCERPTS.length];
         case 'numbers': return '0123456789';
-        case 'names': default: return font.family;
+        case 'names': default: return scriptText || font.family;
       }
     }
 
@@ -1807,7 +1846,7 @@
     let logoMouseSvg = null; // mouse position in SVG coords
     let logoSelectedSeg = null; // currently dragged segment index
     const LOGO_FONT_URL = 'https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.ttf';
-    const LOGO_NODE_RADIUS = 80; // proximity radius in SVG units to show nodes
+    const LOGO_NODE_RADIUS = 60; // proximity radius in SVG units to show nodes
 
     async function initLogo() {
       try {
@@ -1894,45 +1933,49 @@
 
       if (op > 0.01) {
         let px=0, py=0;
-        const anchorR = 2.2;
-        const handleR = 1.6;
+        const anchorR = 1.2;
+        const handleR = 0.8;
 
         for (let i=0; i<logoPathData.length; i++) {
           const c = logoPathData[i];
           const isSelected = (logoSelectedSeg === i);
 
-          // Proximity check — only show nodes near mouse
-          let nearMouse = false;
-          if (c.x !== undefined) nearMouse = nearMouse || distToMouse(c.x, c.y) < LOGO_NODE_RADIUS;
-          if (c.x1 !== undefined) nearMouse = nearMouse || distToMouse(c.x1, c.y1) < LOGO_NODE_RADIUS;
-          if (c.x2 !== undefined) nearMouse = nearMouse || distToMouse(c.x2, c.y2) < LOGO_NODE_RADIUS;
-          // Also show if this segment is being dragged
-          if (logoDragging && logoDragging.segIdx === i) nearMouse = true;
+          // Compute min distance of this segment's points to mouse
+          let minDist = Infinity;
+          if (c.x !== undefined) minDist = Math.min(minDist, distToMouse(c.x, c.y));
+          if (c.x1 !== undefined) minDist = Math.min(minDist, distToMouse(c.x1, c.y1));
+          if (c.x2 !== undefined) minDist = Math.min(minDist, distToMouse(c.x2, c.y2));
+          if (logoDragging && logoDragging.segIdx === i) minDist = 0;
 
-          const segOp = nearMouse ? op : 0;
+          // Distance-based alpha: full at center, fades to 0 at LOGO_NODE_RADIUS
+          let segOp = 0;
+          if (minDist < LOGO_NODE_RADIUS) {
+            const t = 1 - (minDist / LOGO_NODE_RADIUS);
+            segOp = op * t * t; // quadratic ease for smooth falloff
+          }
 
           if (segOp > 0.01) {
             if (c.type==='Q') {
-              html += `<line x1="${px}" y1="${py}" x2="${c.x1}" y2="${c.y1}" stroke="${handleLineColor}" stroke-width="0.4" opacity="${segOp}"/>`;
-              html += `<line x1="${c.x1}" y1="${c.y1}" x2="${c.x}" y2="${c.y}" stroke="${handleLineColor}" stroke-width="0.4" opacity="${segOp}"/>`;
-              html += `<circle cx="${c.x1}" cy="${c.y1}" r="${handleR}" fill="${accentBlue}" opacity="${segOp}" data-seg="${i}" data-prop="x1y1" style="cursor:grab"/>`;
+              html += `<line x1="${px}" y1="${py}" x2="${c.x1}" y2="${c.y1}" stroke="${handleLineColor}" stroke-width="0.3" opacity="${(segOp*0.7).toFixed(2)}"/>`;
+              html += `<line x1="${c.x1}" y1="${c.y1}" x2="${c.x}" y2="${c.y}" stroke="${handleLineColor}" stroke-width="0.3" opacity="${(segOp*0.7).toFixed(2)}"/>`;
+              html += `<circle cx="${c.x1}" cy="${c.y1}" r="${handleR}" fill="${accentBlue}" opacity="${segOp.toFixed(2)}" data-seg="${i}" data-prop="x1y1" style="cursor:grab"/>`;
             }
             if (c.type==='C') {
-              html += `<line x1="${px}" y1="${py}" x2="${c.x1}" y2="${c.y1}" stroke="${handleLineColor}" stroke-width="0.4" opacity="${segOp}"/>`;
-              html += `<circle cx="${c.x1}" cy="${c.y1}" r="${handleR}" fill="${accentBlue}" opacity="${segOp}" data-seg="${i}" data-prop="x1y1" style="cursor:grab"/>`;
-              html += `<line x1="${c.x}" y1="${c.y}" x2="${c.x2}" y2="${c.y2}" stroke="${handleLineColor}" stroke-width="0.4" opacity="${segOp}"/>`;
-              html += `<circle cx="${c.x2}" cy="${c.y2}" r="${handleR}" fill="${accentBlue}" opacity="${segOp}" data-seg="${i}" data-prop="x2y2" style="cursor:grab"/>`;
+              html += `<line x1="${px}" y1="${py}" x2="${c.x1}" y2="${c.y1}" stroke="${handleLineColor}" stroke-width="0.3" opacity="${(segOp*0.7).toFixed(2)}"/>`;
+              html += `<circle cx="${c.x1}" cy="${c.y1}" r="${handleR}" fill="${accentBlue}" opacity="${segOp.toFixed(2)}" data-seg="${i}" data-prop="x1y1" style="cursor:grab"/>`;
+              html += `<line x1="${c.x}" y1="${c.y}" x2="${c.x2}" y2="${c.y2}" stroke="${handleLineColor}" stroke-width="0.3" opacity="${(segOp*0.7).toFixed(2)}"/>`;
+              html += `<circle cx="${c.x2}" cy="${c.y2}" r="${handleR}" fill="${accentBlue}" opacity="${segOp.toFixed(2)}" data-seg="${i}" data-prop="x2y2" style="cursor:grab"/>`;
             }
-            // Anchor point (on-curve) — blue filled circle
+            // Anchor point — small blue circle with thin white stroke
             if (c.x!==undefined && c.type!=='Z') {
-              html += `<circle cx="${c.x}" cy="${c.y}" r="${anchorR}" fill="${accentBlue}" stroke="#fff" stroke-width="0.4" opacity="${segOp}" data-seg="${i}" data-prop="xy" style="cursor:grab"/>`;
+              html += `<circle cx="${c.x}" cy="${c.y}" r="${anchorR}" fill="${accentBlue}" stroke="#fff" stroke-width="0.25" opacity="${segOp.toFixed(2)}" data-seg="${i}" data-prop="xy" style="cursor:grab"/>`;
             }
             // Coordinate label on dragged node
             if (isSelected && logoDragging) {
               const lx = c.x !== undefined ? c.x : (c.x1 || 0);
               const ly = c.y !== undefined ? c.y : (c.y1 || 0);
-              html += `<text x="${lx + 4}" y="${ly + 10}" font-size="5" font-family="-apple-system,sans-serif" fill="${accentBlue}" opacity="${segOp}">X: ${Math.round(lx)}</text>`;
-              html += `<text x="${lx + 4}" y="${ly + 16}" font-size="5" font-family="-apple-system,sans-serif" fill="${accentBlue}" opacity="${segOp}">Y: ${Math.round(ly)}</text>`;
+              html += `<text x="${lx + 3}" y="${ly + 7}" font-size="4" font-family="-apple-system,sans-serif" fill="${accentBlue}" opacity="${segOp.toFixed(2)}">X: ${Math.round(lx)}</text>`;
+              html += `<text x="${lx + 3}" y="${ly + 12}" font-size="4" font-family="-apple-system,sans-serif" fill="${accentBlue}" opacity="${segOp.toFixed(2)}">Y: ${Math.round(ly)}</text>`;
             }
           }
 
