@@ -851,26 +851,47 @@
 
     async function loadFonts() {
       const app = document.getElementById('app');
+
       if ('queryLocalFonts' in window) {
-        app.innerHTML = `<div class="loading"><div class="spinner"></div><div class="loading-text">Reading local fonts...</div></div>`;
-        try {
-          const fonts = await window.queryLocalFonts();
-          if (fonts && fonts.length > 0) {
-            const familyMap = new Map();
-            for (const font of fonts) {
-              if (!familyMap.has(font.family)) familyMap.set(font.family, { family: font.family, styles: [] });
-              familyMap.get(font.family).styles.push(font.style);
+        // Show a button to trigger with user gesture (required for permission)
+        app.innerHTML = `
+          <div class="unsupported">
+            <h2>Load Your Local Fonts</h2>
+            <p style="margin-bottom:24px">Click the button below to read fonts installed on your device.</p>
+            <button class="pick-btn" id="grantBtn">🔤 Load Local Fonts</button>
+            <p style="margin-top:16px;font-size:13px;color:var(--text-secondary)">
+              Or <a href="#" id="folderFallback" style="color:var(--text);text-decoration:underline">choose a font folder</a> manually
+            </p>
+          </div>`;
+
+        document.getElementById('grantBtn').addEventListener('click', async () => {
+          app.innerHTML = `<div class="loading"><div class="spinner"></div><div class="loading-text">Reading local fonts...</div></div>`;
+          try {
+            const fonts = await window.queryLocalFonts();
+            if (fonts && fonts.length > 0) {
+              const familyMap = new Map();
+              for (const font of fonts) {
+                if (!familyMap.has(font.family)) familyMap.set(font.family, { family: font.family, styles: [] });
+                familyMap.get(font.family).styles.push(font.style);
+              }
+              allFonts = Array.from(familyMap.values()).map(f => ({
+                ...f, category: classifyFont(f.family), styleCount: f.styles.length
+              }));
+              allFonts.sort((a, b) => a.family.localeCompare(b.family));
+              render();
+              return;
             }
-            allFonts = Array.from(familyMap.values()).map(f => ({
-              ...f, category: classifyFont(f.family), styleCount: f.styles.length
-            }));
-            allFonts.sort((a, b) => a.family.localeCompare(b.family));
-            render();
-            return;
-          }
-        } catch (e) { /* fall through */ }
+          } catch (e) { /* fall through */ }
+          showPickerUI();
+        });
+
+        document.getElementById('folderFallback').addEventListener('click', (e) => {
+          e.preventDefault();
+          pickFolder();
+        });
+      } else {
+        showPickerUI();
       }
-      showPickerUI();
     }
 
     function showPickerUI() {
