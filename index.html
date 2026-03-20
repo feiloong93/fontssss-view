@@ -489,6 +489,29 @@
     .card-preview.align-left { text-align: left; }
     .card-preview.align-center { text-align: center; }
     .card-preview.align-right { text-align: right; }
+
+    /* Star / Favorite */
+    .star-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px;
+      transition: transform 0.2s;
+      line-height: 1;
+    }
+
+    .star-btn:hover { transform: scale(1.3); }
+
+    .star-btn.favorited {
+      animation: starPop 0.3s ease;
+    }
+
+    @keyframes starPop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.4); }
+      100% { transform: scale(1); }
+    }
 </style>
 </head>
 <body>
@@ -504,10 +527,11 @@
         <span class="tab-label">MiSans</span>
         <span class="tab-count" id="navMiSansCount"></span>
       </button>
+      <button class="nav-tab" data-tab="favorites" onclick="switchTab('favorites')">
+        <span class="tab-label">⭐ 收藏</span>
+        <span class="tab-count" id="navFavCount">0</span>
+      </button>
     </nav>
-    <div class="header-right">
-      <span id="selectedInfo" style="color:var(--text-secondary)">No styles selected</span>
-    </div>
   </header>
 
   <!-- TOOLBAR -->
@@ -619,6 +643,24 @@
     let previewMode = 'names';
     let textAlign = 'left';
     let customText = '';
+
+    // ---- Favorites (persisted in localStorage) ----
+    let favorites = new Set(JSON.parse(localStorage.getItem('fontssss_favorites') || '[]'));
+
+    function saveFavorites() {
+      localStorage.setItem('fontssss_favorites', JSON.stringify([...favorites]));
+    }
+
+    function toggleFavorite(family, event) {
+      event.stopPropagation();
+      if (favorites.has(family)) {
+        favorites.delete(family);
+      } else {
+        favorites.add(family);
+      }
+      saveFavorites();
+      render();
+    }
 
     const CITIES = ['Hamburg', 'Tokyo', 'São Paulo', 'Melbourne', 'Reykjavik', 'Nairobi', 'Montréal', 'Zürich', 'Bangalore', 'Oslo'];
     const EXCERPTS = [
@@ -755,6 +797,8 @@
       // Tab filter
       if (currentTab === 'misans') {
         fonts = fonts.filter(f => /misan/i.test(f.family));
+      } else if (currentTab === 'favorites') {
+        fonts = fonts.filter(f => favorites.has(f.family));
       }
 
       if (currentFilter !== 'all') fonts = fonts.filter(f => f.category === currentFilter);
@@ -765,32 +809,51 @@
         fonts = fonts.filter(f => f.family.toLowerCase().includes(q));
       }
 
+      // Sort: favorites first, then alphabetical
+      if (currentTab !== 'favorites') {
+        fonts.sort((a, b) => {
+          const aFav = favorites.has(a.family) ? 0 : 1;
+          const bFav = favorites.has(b.family) ? 0 : 1;
+          if (aFav !== bFav) return aFav - bFav;
+          return a.family.localeCompare(b.family);
+        });
+      }
+
       // Update counts
       document.getElementById('navFontCount').textContent = allFonts.length;
       const miSansCount = allFonts.filter(f => /misan/i.test(f.family)).length;
       document.getElementById('navMiSansCount').textContent = miSansCount || '';
+      document.getElementById('navFavCount').textContent = favorites.size;
 
       if (fonts.length === 0) {
         app.innerHTML = `<div style="text-align:center;padding:80px 40px;color:var(--text-secondary);"><p style="font-size:18px;">No fonts found</p></div>`;
         return;
       }
 
-      app.innerHTML = `<div class="grid">${fonts.map((f, i) => `
-        <div class="card" style="animation-delay:${Math.min(i * 20, 400)}ms" onclick="copyName('${f.family.replace(/'/g, "\\'")}')">
+      app.innerHTML = `<div class="grid">${fonts.map((f, i) => {
+        const isFav = favorites.has(f.family);
+        const escapedFamily = f.family.replace(/'/g, "\\'");
+        return `
+        <div class="card" style="animation-delay:${Math.min(i * 20, 400)}ms" onclick="copyName('${escapedFamily}')">
           <div class="card-preview align-${textAlign}" style="font-family:'${f.family}',sans-serif;font-size:${fontSize}px">
             ${getPreviewText(f, i)}
           </div>
           <div class="card-info">
             <div>
-              <div class="card-name">${f.family}</div>
+              <div class="card-name">
+                ${f.family}
+                <button class="star-btn ${isFav ? 'favorited' : ''}" onclick="toggleFavorite('${escapedFamily}', event)" title="${isFav ? 'Remove from favorites' : 'Add to favorites'}">
+                  ${isFav ? '★' : '☆'}
+                </button>
+              </div>
               <div class="card-styles">${f.styleCount} style${f.styleCount > 1 ? 's' : ''}</div>
             </div>
             <div class="card-meta">
               <span class="card-hint">Click to copy</span>
             </div>
           </div>
-        </div>
-      `).join('')}</div>`;
+        </div>`;
+      }).join('')}</div>`;
     }
 
     // ---- Load from font files ----
