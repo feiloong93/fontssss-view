@@ -506,6 +506,10 @@
       padding: 24px 32px;
       border-bottom: 1px solid var(--border);
       gap: 16px;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 50;
     }
 
     .glyph-back {
@@ -1181,6 +1185,10 @@
       currentGlyphFont = family;
       currentOTFont = null;
       selectedGlyphCP = null;
+
+      // Push browser history so back button returns to font list
+      history.pushState({ view: 'glyph', family, styleCount }, '', '#glyph/' + encodeURIComponent(family));
+
       const glyphView = document.getElementById('glyphView');
       const app = document.getElementById('app');
       const toolbar = document.querySelector('.toolbar');
@@ -1379,9 +1387,18 @@
         { name: 'Descender', y: baselineY - descender * scale, color: '#9b59b6' },
       ];
 
+      // Deduplicate lines that are too close (< 14px apart) — offset labels
+      const minGap = 16;
+      const sortedMetrics = [...metrics].sort((a, b) => a.y - b.y);
+      for (let i = 1; i < sortedMetrics.length; i++) {
+        if (sortedMetrics[i].y - sortedMetrics[i - 1].y < minGap) {
+          sortedMetrics[i].labelOffset = (sortedMetrics[i].labelOffset || 0) + minGap - (sortedMetrics[i].y - sortedMetrics[i - 1].y);
+        }
+      }
+
       // Draw metric lines
       ctx.font = '11px -apple-system, sans-serif';
-      for (const m of metrics) {
+      for (const m of sortedMetrics) {
         ctx.strokeStyle = m.color;
         ctx.globalAlpha = 0.5;
         ctx.lineWidth = 1;
@@ -1394,7 +1411,8 @@
         ctx.globalAlpha = 0.7;
         ctx.fillStyle = m.color;
         ctx.textAlign = 'right';
-        ctx.fillText(m.name, leftPad - 10, m.y + 4);
+        const labelY = m.y + 4 + (m.labelOffset || 0);
+        ctx.fillText(m.name, leftPad - 10, labelY);
       }
       ctx.globalAlpha = 1;
 
@@ -1442,13 +1460,24 @@
       main.innerHTML = html;
     }
 
-    function hideGlyphView() {
+    function hideGlyphView(skipHistory) {
+      if (!document.getElementById('glyphView').classList.contains('active')) return;
       document.getElementById('glyphView').classList.remove('active');
       document.getElementById('app').style.display = '';
       document.querySelector('.toolbar').style.display = '';
       currentOTFont = null;
       selectedGlyphCP = null;
+      if (!skipHistory) {
+        history.pushState({ view: 'main' }, '', location.pathname);
+      }
     }
+
+    // Browser back/forward button support
+    window.addEventListener('popstate', (e) => {
+      if (document.getElementById('glyphView').classList.contains('active')) {
+        hideGlyphView(true); // skip pushing history again
+      }
+    });
 
     // ---- Glyph detail ----
     function getUnicodeName(cp) {
