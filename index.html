@@ -563,10 +563,27 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
-    .glyph-font-styles {
+    .glyph-style-select {
       font-size: 13px;
       color: var(--text-secondary);
       margin-left: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 12px;
+      background: var(--card-bg);
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      padding-right: 28px;
+    }
+
+    .glyph-style-select:hover {
+      border-color: var(--text-secondary);
     }
 
     .glyph-body {
@@ -926,7 +943,7 @@
         Back
       </button>
       <span class="glyph-font-name" id="glyphFontName"></span>
-      <span class="glyph-font-styles" id="glyphFontStyles"></span>
+      <select class="glyph-style-select" id="glyphStyleSelect" onchange="switchGlyphStyle(this.value)"></select>
     </div>
     <div class="glyph-body">
       <div class="glyph-metrics-panel" id="glyphMetricsPanel">
@@ -1418,7 +1435,16 @@
       const toolbar = document.querySelector('.toolbar');
 
       document.getElementById('glyphFontName').textContent = family;
-      document.getElementById('glyphFontStyles').textContent = `${styleCount} style${styleCount > 1 ? 's' : ''}`;
+
+      // Populate style selector
+      const styleSelect = document.getElementById('glyphStyleSelect');
+      const fontEntry = allFonts.find(f => f.family === family);
+      const styles = fontEntry ? fontEntry.styles : [];
+      styleSelect.innerHTML = styles.map((s, i) =>
+        `<option value="${s}" ${i === 0 ? 'selected' : ''}>${s}</option>`
+      ).join('');
+      if (styles.length <= 1) styleSelect.style.display = 'none';
+      else styleSelect.style.display = '';
 
       // Show loading state
       const main = document.getElementById('glyphMain');
@@ -1462,13 +1488,55 @@
       }
     }
 
-    async function getFontCodepointsAndFont(family) {
+    async function switchGlyphStyle(style) {
+      if (!currentGlyphFont) return;
+      const family = currentGlyphFont;
+      const main = document.getElementById('glyphMain');
+      main.innerHTML = '<div class="loading"><div class="spinner"></div><div class="loading-text">Switching style...</div></div>';
+
+      try {
+        const { cps, font } = await getFontCodepointsAndFont(family, style);
+        currentOTFont = font;
+        if (cps.length === 0) {
+          main.innerHTML = '<div style="text-align:center;padding:80px;color:var(--text-secondary)">Could not read glyph data for this style.</div>';
+          return;
+        }
+
+        const blockMap = new Map();
+        for (const cp of cps) {
+          if (cp < 0x0020) continue;
+          const blockName = getBlockName(cp);
+          if (!blockMap.has(blockName)) blockMap.set(blockName, []);
+          blockMap.get(blockName).push(cp);
+        }
+
+        const blocks = Array.from(blockMap.entries())
+          .map(([name, cps]) => ({ name, cps: cps.sort((a, b) => a - b) }))
+          .sort((a, b) => a.cps[0] - b.cps[0]);
+
+        renderGlyphGridFromBlocks(family, blocks);
+
+        const firstCP = cps.includes(0x0041) ? 0x0041 : (cps.find(c => c >= 0x0020) || cps[0]);
+        selectGlyph(firstCP, family);
+      } catch (e) {
+        console.error('Style switch error:', e);
+        main.innerHTML = '<div style="text-align:center;padding:80px;color:var(--text-secondary)">Failed to load this style.</div>';
+      }
+    }
+
+    async function getFontCodepointsAndFont(family, style) {
       let arrayBuffer = null;
 
       if ('queryLocalFonts' in window) {
         try {
           const fonts = await window.queryLocalFonts();
-          const match = fonts.find(f => f.family === family);
+          let match;
+          if (style) {
+            match = fonts.find(f => f.family === family && f.style === style);
+          }
+          if (!match) {
+            match = fonts.find(f => f.family === family);
+          }
           if (match) {
             const blob = await match.blob();
             arrayBuffer = await blob.arrayBuffer();
@@ -1670,9 +1738,29 @@
       ctx.globalAlpha = 1;
     }
 
+    function getStyleCSS() {
+      const sel = document.getElementById('glyphStyleSelect');
+      const style = sel ? sel.value : '';
+      const s = style.toLowerCase();
+      let weight = '400';
+      let fontStyle = 'normal';
+      if (/\bbold\b/.test(s)) weight = '700';
+      else if (/\bblack\b|heavy/.test(s)) weight = '900';
+      else if (/\bextrabold\b|ultra\s?bold/.test(s)) weight = '800';
+      else if (/\bsemibold\b|demi\s?bold/.test(s)) weight = '600';
+      else if (/\bmedium\b/.test(s)) weight = '500';
+      else if (/\blight\b/.test(s)) weight = '300';
+      else if (/\bthin\b|hairline/.test(s)) weight = '100';
+      else if (/\bextralight\b|ultra\s?light/.test(s)) weight = '200';
+      if (/italic/i.test(s)) fontStyle = 'italic';
+      else if (/oblique/i.test(s)) fontStyle = 'oblique';
+      return `font-weight:${weight};font-style:${fontStyle}`;
+    }
+
     function renderGlyphGridFromBlocks(family, blocks) {
       const main = document.getElementById('glyphMain');
       const escapedFamily = family.replace(/'/g, "\\'");
+      const cssStyle = getStyleCSS();
       let html = '';
       blocks.forEach((block, bi) => {
         html += `<div id="glyph-block-${bi}"><div class="glyph-block-title">${block.name} · ${block.cps.length} glyphs</div><div class="glyph-grid">`;
@@ -1680,7 +1768,7 @@
           const ch = String.fromCodePoint(cp);
           const hex = cp.toString(16).toUpperCase().padStart(4, '0');
           html += `<div class="glyph-cell" data-cp="${cp}" onclick="selectGlyph(${cp}, '${escapedFamily}')">
-            <span class="glyph-char" style="font-family:'${family}',sans-serif">${ch}</span>
+            <span class="glyph-char" style="font-family:'${family}',sans-serif;${cssStyle}">${ch}</span>
             <span class="glyph-code">U+${hex}</span>
           </div>`;
         }
