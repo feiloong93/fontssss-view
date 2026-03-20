@@ -144,6 +144,20 @@
       border-bottom: none;
     }
 
+    .toolbar-row-collapsible {
+      overflow: hidden;
+      transition: min-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+    }
+
+    .toolbar-row-collapsible.collapsed {
+      min-height: 0;
+      height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      opacity: 0;
+      border-bottom: none;
+    }
+
     .tool-item {
       display: flex;
       align-items: center;
@@ -804,7 +818,7 @@
   <!-- TOOLBAR -->
   <div class="toolbar">
     <!-- Row 1 -->
-    <div class="toolbar-row">
+    <div class="toolbar-row toolbar-row-collapsible" id="toolbarRow1">
       <button class="tool-item" id="searchToggle">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         Search
@@ -1037,13 +1051,58 @@
     // ---- Get preview text ----
     function getPreviewText(font, index) {
       if (customText) return customText;
-      // Check if font needs script-specific preview
       const scriptText = getScriptPreview(font.family);
       switch (previewMode) {
         case 'excerpts': return scriptText || EXCERPTS[index % EXCERPTS.length];
         case 'numbers': return '0123456789';
-        case 'names': default: return scriptText || font.family;
+        case 'names': default: return scriptText || (font.displayName || font.family);
       }
+    }
+
+    // ---- Resolve localized (Chinese) font names ----
+    async function resolveLocalizedNames() {
+      if (!('queryLocalFonts' in window)) return;
+      let changed = false;
+      try {
+        const fonts = await window.queryLocalFonts();
+        // Group by family, pick first of each
+        const seen = new Set();
+        const toCheck = [];
+        for (const f of fonts) {
+          if (seen.has(f.family)) continue;
+          seen.add(f.family);
+          toCheck.push(f);
+        }
+        // Process in batches to avoid blocking
+        for (let i = 0; i < toCheck.length; i += 10) {
+          const batch = toCheck.slice(i, i + 10);
+          await Promise.all(batch.map(async (fontData) => {
+            try {
+              const blob = await fontData.blob();
+              const buf = await blob.arrayBuffer();
+              const otFont = opentype.parse(buf);
+              const names = otFont.names;
+              // Look for Chinese family name (zh, zh-Hans, zh-Hant, zh-CN, zh-TW)
+              const familyNames = names.fontFamily || names.preferredFamily || {};
+              let zhName = null;
+              for (const lang of Object.keys(familyNames)) {
+                if (/^zh/i.test(lang)) {
+                  zhName = familyNames[lang];
+                  break;
+                }
+              }
+              if (zhName && zhName !== fontData.family) {
+                const match = allFonts.find(f => f.family === fontData.family);
+                if (match) {
+                  match.displayName = zhName;
+                  changed = true;
+                }
+              }
+            } catch (e) { /* skip unparseable fonts */ }
+          }));
+        }
+      } catch (e) { /* permission error */ }
+      if (changed) render();
     }
 
     // ---- Dropdown ----
@@ -1184,7 +1243,7 @@
           <div class="card-info">
             <div>
               <div class="card-name">
-                ${f.family}
+                ${f.displayName || f.family}
                 <button class="star-btn ${isFav ? 'favorited' : ''}" onclick="toggleFavorite('${escapedFamily}', event)" title="${isFav ? 'Remove from favorites' : 'Add to favorites'}">
                   ${isFav ? '<svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor" stroke="none"/></svg>' : '<svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'}
                 </button>
@@ -1749,6 +1808,7 @@
             }));
             allFonts.sort((a, b) => a.family.localeCompare(b.family));
             render();
+            resolveLocalizedNames();
             return;
           }
         } catch (e) {
@@ -1781,6 +1841,7 @@
               }));
               allFonts.sort((a, b) => a.family.localeCompare(b.family));
               render();
+              resolveLocalizedNames();
               return;
             }
           } catch (e) { /* fall through */ }
@@ -1807,6 +1868,20 @@
     }
 
     // ---- Events ----
+
+    // Collapse first toolbar row on scroll
+    let lastScrollY = 0;
+    const toolbarRow1 = document.getElementById('toolbarRow1');
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY;
+      if (y > 60) {
+        toolbarRow1.classList.add('collapsed');
+      } else {
+        toolbarRow1.classList.remove('collapsed');
+      }
+      lastScrollY = y;
+    }, { passive: true });
+
     document.getElementById('searchToggle').addEventListener('click', () => {
       const box = document.getElementById('searchBox');
       box.style.display = box.style.display === 'none' ? 'inline-block' : 'none';
