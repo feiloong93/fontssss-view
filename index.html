@@ -1527,11 +1527,13 @@
       const capHeight = os2 ? (os2.sCapHeight || ascender) : ascender;
       const xHeight = os2 ? (os2.sxHeight || Math.round(ascender * 0.5)) : Math.round(ascender * 0.5);
 
-      // Scale to fit canvas
+      // Scale to fit canvas — use the smaller of height/width scale to avoid overflow
       const totalHeight = ascender - descender;
-      const scale = (H - 80) / totalHeight;
-      const baselineY = 40 + ascender * scale;
-      const leftPad = 80;
+      const leftPad = 90;
+      const vScale = (H - 80) / totalHeight;
+      const hScale = (W - leftPad - 40) / unitsPerEm;
+      const scale = Math.min(vScale, hScale);
+      const baselineY = (H - totalHeight * scale) / 2 + ascender * scale;
 
       // Metric lines — all gray, left-aligned labels
       const lineColor2 = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
