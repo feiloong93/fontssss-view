@@ -126,10 +126,16 @@
     /* ===== TOOLBAR ===== */
     .toolbar {
       border-bottom: 1px solid var(--border);
-      background: var(--bg);
+      background: rgba(245, 245, 240, 0.8);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
       position: sticky;
       top: 150px;
       z-index: 90;
+    }
+
+    body.dark .toolbar {
+      background: rgba(26, 26, 26, 0.8);
     }
 
     .toolbar-row {
