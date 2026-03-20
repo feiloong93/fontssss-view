@@ -841,7 +841,10 @@
         <span class="tab-label">♥ 收藏</span>
         <span class="tab-count" id="navFavCount">0</span>
       </button>
-      <button class="nav-tab" id="addFolderBtn" onclick="addFontFolder()" title="添加本地字体文件夹" style="min-width:60px;font-size:20px;font-weight:300;color:var(--text-secondary)">+</button>
+      <button class="nav-tab" id="addFolderBtn" onclick="addFontFolder()" title="添加本地字体文件夹" style="min-width:60px;font-size:18px;font-weight:300;color:var(--text-secondary)">
+        <span class="tab-label">+</span>
+        <span class="tab-count" style="font-size:11px">添加文件夹</span>
+      </button>
     </nav>
   </header>
 
@@ -1880,33 +1883,85 @@
     async function pickFolder() {
       try {
         const dirHandle = await window.showDirectoryPicker();
-        const files = [];
-        for await (const entry of dirHandle.values()) {
-          if (entry.kind === 'file') files.push(await entry.getFile());
-        }
-        for await (const entry of dirHandle.values()) {
-          if (entry.kind === 'directory') {
-            try { for await (const sub of entry.values()) { if (sub.kind === 'file') files.push(await sub.getFile()); } } catch(e) {}
-          }
-        }
-        await loadFromFiles(files);
+        await addDirHandle(dirHandle);
       } catch (e) { /* cancelled */ }
     }
 
     async function addFontFolder() {
       try {
         const dirHandle = await window.showDirectoryPicker();
-        const files = [];
+        await addDirHandle(dirHandle);
+      } catch (e) { /* cancelled */ }
+    }
+
+    // ---- IndexedDB for persistent directory handles ----
+    function openDirDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open('fontssss_dirs', 1);
+        req.onupgradeneeded = () => req.result.createObjectStore('handles', { keyPath: 'id', autoIncrement: true });
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function saveDirHandle(handle) {
+      try {
+        const db = await openDirDB();
+        const tx = db.transaction('handles', 'readwrite');
+        tx.objectStore('handles').add({ name: handle.name, handle });
+        await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+      } catch (e) { /* IndexedDB not available */ }
+    }
+
+    async function getSavedDirHandles() {
+      try {
+        const db = await openDirDB();
+        const tx = db.transaction('handles', 'readonly');
+        const store = tx.objectStore('handles');
+        return new Promise((resolve) => {
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => resolve([]);
+        });
+      } catch (e) { return []; }
+    }
+
+    async function clearSavedDirHandles() {
+      try {
+        const db = await openDirDB();
+        const tx = db.transaction('handles', 'readwrite');
+        tx.objectStore('handles').clear();
+      } catch (e) {}
+    }
+
+    async function collectFilesFromDir(dirHandle) {
+      const files = [];
+      try {
         for await (const entry of dirHandle.values()) {
           if (entry.kind === 'file') files.push(await entry.getFile());
         }
         for await (const entry of dirHandle.values()) {
           if (entry.kind === 'directory') {
-            try { for await (const sub of entry.values()) { if (sub.kind === 'file') files.push(await sub.getFile()); } } catch(e) {}
+            try {
+              for await (const sub of entry.values()) {
+                if (sub.kind === 'file') files.push(await sub.getFile());
+              }
+            } catch(e) {}
           }
         }
-        await mergeFromFiles(files);
-      } catch (e) { /* cancelled */ }
+      } catch (e) { /* permission lost */ }
+      return files;
+    }
+
+    async function addDirHandle(dirHandle) {
+      // Save to IndexedDB for next time
+      await saveDirHandle(dirHandle);
+      // Collect and merge files
+      const files = await collectFilesFromDir(dirHandle);
+      await mergeFromFiles(files);
+      // Hide the banner if visible
+      const banner = document.getElementById('addFolderBanner');
+      if (banner) banner.style.display = 'none';
     }
 
     async function mergeFromFiles(files) {
@@ -1929,6 +1984,8 @@
           document.fonts.add(fontFace);
 
           if (!fontBlobCache.has(family)) fontBlobCache.set(family, buf.slice(0));
+          const styleName = file.name.replace(/\.[^.]+$/, '');
+          fontBlobCache.set(family + '::' + styleName, buf.slice(0));
 
           if (existingFamilies.has(family)) {
             const existing = existingFamilies.get(family);
@@ -1953,14 +2010,72 @@
       allFonts.sort((a, b) => a.family.localeCompare(b.family));
       render();
       if (added > 0) showToast(`已添加 ${added} 个字体`);
-      else showToast('未发现新字体');
+    }
+
+    async function autoLoadSavedDirs() {
+      const saved = await getSavedDirHandles();
+      if (saved.length === 0) return false;
+      let totalAdded = 0;
+      for (const entry of saved) {
+        const handle = entry.handle;
+        try {
+          // Verify permission is still granted
+          const perm = await handle.queryPermission({ mode: 'read' });
+          if (perm !== 'granted') {
+            const req = await handle.requestPermission({ mode: 'read' });
+            if (req !== 'granted') continue;
+          }
+          const files = await collectFilesFromDir(handle);
+          const validExts = ['.ttf', '.otf', '.woff', '.woff2', '.ttc'];
+          const existingFamilies = new Map(allFonts.map(f => [f.family, f]));
+          for (const file of files) {
+            const name = file.name.toLowerCase();
+            if (!validExts.some(ext => name.endsWith(ext))) continue;
+            try {
+              const buf = await file.arrayBuffer();
+              let family = file.name.replace(/\.[^.]+$/, '')
+                .replace(/[-_](Regular|Bold|Italic|Light|Medium|Thin|Black|SemiBold|ExtraBold|ExtraLight|Heavy|Condensed|Expanded|Oblique|Book|Demi|Ultra)/gi, '')
+                .replace(/[-_]/g, ' ').trim();
+              if (!family) family = file.name.replace(/\.[^.]+$/, '');
+
+              const fontFace = new FontFace(family, buf);
+              await fontFace.load();
+              document.fonts.add(fontFace);
+
+              if (!fontBlobCache.has(family)) fontBlobCache.set(family, buf.slice(0));
+
+              if (existingFamilies.has(family)) {
+                const existing = existingFamilies.get(family);
+                if (!existing.styles.includes(file.name)) {
+                  existing.styles.push(file.name);
+                  existing.styleCount = existing.styles.length;
+                }
+              } else {
+                const newFont = {
+                  family,
+                  styles: [file.name],
+                  category: classifyFont(family),
+                  styleCount: 1
+                };
+                allFonts.push(newFont);
+                existingFamilies.set(family, newFont);
+                totalAdded++;
+              }
+            } catch (e) { /* skip */ }
+          }
+        } catch (e) { /* permission denied or handle invalid */ }
+      }
+      if (totalAdded > 0) {
+        allFonts.sort((a, b) => a.family.localeCompare(b.family));
+        render();
+      }
+      return saved.length > 0;
     }
 
     async function loadFonts() {
       const app = document.getElementById('app');
 
       if ('queryLocalFonts' in window) {
-        // Try auto-loading first (works if permission was already granted)
         app.innerHTML = `<div class="loading"><div class="spinner"></div><div class="loading-text">Reading local fonts...</div></div>`;
         try {
           const fonts = await window.queryLocalFonts();
@@ -1976,6 +2091,10 @@
             allFonts.sort((a, b) => a.family.localeCompare(b.family));
             render();
             resolveLocalizedNames();
+            // Auto-load saved font folders from IndexedDB
+            const hadSavedDirs = await autoLoadSavedDirs();
+            // If no saved dirs, show a subtle banner to add font folders
+            if (!hadSavedDirs) showAddFolderBanner();
             return;
           }
         } catch (e) {
@@ -2009,6 +2128,8 @@
               allFonts.sort((a, b) => a.family.localeCompare(b.family));
               render();
               resolveLocalizedNames();
+              const hadSavedDirs = await autoLoadSavedDirs();
+              if (!hadSavedDirs) showAddFolderBanner();
               return;
             }
           } catch (e) { /* fall through */ }
@@ -2022,6 +2143,20 @@
       } else {
         showPickerUI();
       }
+    }
+
+    function showAddFolderBanner() {
+      // Subtle banner at top of grid area prompting to add downloaded font folders
+      const app = document.getElementById('app');
+      const banner = document.createElement('div');
+      banner.id = 'addFolderBanner';
+      banner.style.cssText = 'padding:14px 40px;background:var(--hover-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;font-size:13px;color:var(--text-secondary);';
+      banner.innerHTML = `
+        <span>💡 已加载系统已安装字体。如需预览已下载但未安装的字体，可添加字体文件夹（如 Downloads），下次打开会自动加载。</span>
+        <button onclick="addFontFolder()" style="padding:6px 16px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--text);font-size:13px;cursor:pointer;white-space:nowrap;font-family:inherit">添加文件夹</button>
+        <button onclick="this.parentElement.style.display='none'" style="border:none;background:none;color:var(--text-secondary);cursor:pointer;font-size:16px;padding:0 4px;line-height:1">×</button>
+      `;
+      app.parentElement.insertBefore(banner, app);
     }
 
     function showPickerUI() {
