@@ -557,18 +557,19 @@
 
     .glyph-body {
       display: flex;
-      min-height: calc(100vh - 90px);
     }
 
-    /* Left metrics panel */
+    /* Left metrics panel — fixed/sticky while right side scrolls */
     .glyph-metrics-panel {
       width: 50%;
       border-right: 1px solid var(--border);
       flex-shrink: 0;
+      position: sticky;
+      top: 70px;
+      height: calc(100vh - 70px);
       display: flex;
       flex-direction: column;
       background: var(--bg);
-      overflow-y: auto;
     }
 
     .glyph-metrics-info {
@@ -601,12 +602,11 @@
       justify-content: center;
       position: relative;
       overflow: hidden;
-      padding: 40px 40px;
-      min-height: 500px;
+      padding: 20px 40px;
     }
 
     .glyph-metrics-canvas-wrap canvas {
-      max-width: 100%;
+      display: block;
     }
 
     .glyph-metrics-details {
@@ -630,7 +630,7 @@
 
     .glyph-main {
       flex: 1;
-      overflow-y: auto;
+      min-width: 0;
     }
 
     .glyph-block-title {
@@ -1480,7 +1480,8 @@
       const canvas = document.getElementById('glyphMetricsCanvas');
       const wrap = canvas.parentElement;
       const W = wrap.clientWidth - 40;
-      const H = wrap.clientHeight - 20;
+      const H = wrap.clientHeight - 10;
+      if (W <= 0 || H <= 0) return;
       const ctx = canvas.getContext('2d');
       const dpr = window.devicePixelRatio || 1;
       canvas.width = W * dpr;
@@ -1499,7 +1500,8 @@
       const canvas = document.getElementById('glyphMetricsCanvas');
       const wrap = canvas.parentElement;
       const W = wrap.clientWidth - 40;
-      const H = wrap.clientHeight - 20;
+      const H = wrap.clientHeight - 10;
+      if (W <= 0 || H <= 0) return;
       const ctx = canvas.getContext('2d');
       const dpr = window.devicePixelRatio || 1;
       canvas.width = W * dpr;
