@@ -550,7 +550,7 @@
 
     /* Left metrics panel */
     .glyph-metrics-panel {
-      width: 420px;
+      width: 50%;
       border-right: 1px solid var(--border);
       flex-shrink: 0;
       display: flex;
@@ -1014,6 +1014,10 @@
 
     // ---- Tab switch ----
     function switchTab(tab) {
+      // If in glyph view, exit first
+      if (document.getElementById('glyphView').classList.contains('active')) {
+        hideGlyphView();
+      }
       currentTab = tab;
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
       render();
@@ -1304,25 +1308,30 @@
 
     function drawMetricsPlaceholder() {
       const canvas = document.getElementById('glyphMetricsCanvas');
+      const wrap = canvas.parentElement;
+      const W = wrap.clientWidth - 40;
+      const H = wrap.clientHeight - 20;
       const ctx = canvas.getContext('2d');
       const dpr = window.devicePixelRatio || 1;
-      canvas.width = 380 * dpr;
-      canvas.height = 400 * dpr;
-      canvas.style.width = '380px';
-      canvas.style.height = '400px';
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
       ctx.scale(dpr, dpr);
-      ctx.clearRect(0, 0, 380, 400);
+      ctx.clearRect(0, 0, W, H);
       ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-secondary');
       ctx.font = '14px -apple-system, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('Select a glyph', 190, 200);
+      ctx.fillText('Select a glyph', W / 2, H / 2);
     }
 
     function drawGlyphMetrics(cp, family) {
       const canvas = document.getElementById('glyphMetricsCanvas');
+      const wrap = canvas.parentElement;
+      const W = wrap.clientWidth - 40;
+      const H = wrap.clientHeight - 20;
       const ctx = canvas.getContext('2d');
       const dpr = window.devicePixelRatio || 1;
-      const W = 380, H = 400;
       canvas.width = W * dpr;
       canvas.height = H * dpr;
       canvas.style.width = W + 'px';
@@ -1352,7 +1361,7 @@
       const totalHeight = ascender - descender;
       const scale = (H - 80) / totalHeight;
       const baselineY = 40 + ascender * scale;
-      const leftPad = 60;
+      const leftPad = 80;
 
       // Metric lines
       const metrics = [
@@ -1364,7 +1373,7 @@
       ];
 
       // Draw metric lines
-      ctx.font = '10px -apple-system, sans-serif';
+      ctx.font = '11px -apple-system, sans-serif';
       for (const m of metrics) {
         ctx.strokeStyle = m.color;
         ctx.globalAlpha = 0.5;
@@ -1378,13 +1387,16 @@
         ctx.globalAlpha = 0.7;
         ctx.fillStyle = m.color;
         ctx.textAlign = 'right';
-        ctx.fillText(m.name, leftPad - 10, m.y + 3);
+        ctx.fillText(m.name, leftPad - 10, m.y + 4);
       }
       ctx.globalAlpha = 1;
 
-      // Draw glyph using opentype.js path
+      // Draw glyph centered horizontally
       const glyphScale = scale;
-      const path = glyph.getPath(leftPad + 40, baselineY, unitsPerEm * glyphScale);
+      const glyphSize = unitsPerEm * glyphScale;
+      const gBbox = glyph.getBoundingBox ? glyph.getBoundingBox() : null;
+      let glyphX = leftPad + (W - leftPad) / 2 - (gBbox ? (gBbox.x1 + gBbox.x2) / 2 * glyphScale : glyphSize / 4);
+      const path = glyph.getPath(glyphX, baselineY, glyphSize);
       ctx.fillStyle = textColor;
       ctx.globalAlpha = 0.85;
 
