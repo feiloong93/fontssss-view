@@ -877,16 +877,23 @@
 
       <div class="tool-separator"></div>
 
-      <!-- Properties dropdown -->
-      <div class="dropdown" id="propDropdown">
-        <button class="tool-item" onclick="toggleDropdown('propDropdown')">
-          Properties
+      <!-- Language dropdown -->
+      <div class="dropdown" id="langDropdown">
+        <button class="tool-item" onclick="toggleDropdown('langDropdown')">
+          Language
           <svg viewBox="0 0 24 24" width="10" height="10"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="dropdown-menu">
-          <div class="dropdown-item active" data-prop="all" onclick="setProperty('all')">All</div>
-          <div class="dropdown-item" data-prop="multi" onclick="setProperty('multi')">Multiple styles</div>
-          <div class="dropdown-item" data-prop="single" onclick="setProperty('single')">Single style</div>
+          <div class="dropdown-item active" data-lang="all" onclick="setLanguage('all')">All</div>
+          <div class="dropdown-item" data-lang="latin" onclick="setLanguage('latin')">Latin</div>
+          <div class="dropdown-item" data-lang="cjk" onclick="setLanguage('cjk')">中日韩 CJK</div>
+          <div class="dropdown-item" data-lang="korean" onclick="setLanguage('korean')">한국어 Korean</div>
+          <div class="dropdown-item" data-lang="arabic" onclick="setLanguage('arabic')">العربية Arabic</div>
+          <div class="dropdown-item" data-lang="devanagari" onclick="setLanguage('devanagari')">देवनागरी Devanagari</div>
+          <div class="dropdown-item" data-lang="thai" onclick="setLanguage('thai')">ไทย Thai</div>
+          <div class="dropdown-item" data-lang="cyrillic" onclick="setLanguage('cyrillic')">Кириллица Cyrillic</div>
+          <div class="dropdown-item" data-lang="greek" onclick="setLanguage('greek')">Ελληνικά Greek</div>
+          <div class="dropdown-item" data-lang="hebrew" onclick="setLanguage('hebrew')">עברית Hebrew</div>
         </div>
       </div>
 
@@ -974,7 +981,7 @@
     // ---- State ----
     let allFonts = [];
     let currentFilter = 'all';
-    let currentProperty = 'all';
+    let currentLanguage = 'all';
     let currentTab = 'all';
     let searchQuery = '';
     let fontSize = 32;
@@ -1160,11 +1167,45 @@
       render();
     }
 
-    function setProperty(prop) {
-      currentProperty = prop;
-      document.querySelectorAll('#propDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.prop === prop));
-      document.getElementById('propDropdown').classList.remove('open');
+    function setLanguage(lang) {
+      currentLanguage = lang;
+      document.querySelectorAll('#langDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.lang === lang));
+      document.getElementById('langDropdown').classList.remove('open');
       render();
+    }
+
+    // Classify font by language/script based on family name
+    function classifyLanguage(family) {
+      const f = family.toLowerCase();
+      // CJK (Chinese, Japanese, Korean share many fonts)
+      if (/\b(sc|cn|cjk|hans|hant|tc|tw|chinese|songti|heiti|kaiti|fangsong|ming|gothic|mincho|meiryo|yu\s?gothic|yu\s?mincho|hiragino|ms\s?gothic|ms\s?mincho|noto\s?sans\s?(cjk|sc|tc|jp|kr|hk)|noto\s?serif\s?(cjk|sc|tc|jp|kr|hk)|source\s?han|pingfang|stkaiti|stsong|stheiti|stfangsong|stxihei|apple\s?sd|applemyungjo|lihei|lisung|lisong|biaukai|wawati|weibei|xingkai|yuppy|baoli|lantinghei|hannotate|hanzipen|yuanti|gb2312|gb18030|big5)\b/i.test(f)) return 'cjk';
+      if (/\b(jp|japanese|kana|hiragana|katakana|osaka)\b/i.test(f)) return 'cjk';
+      if (/\bhangul|korean|batang|dotum|gulim|gungsuh|malgun|nanum|applegothic|applemyungjo\b/i.test(f)) return 'korean';
+      if (/\barabic|naskh|nastaliq|kufi|geeza|baghdad|nadeem|al\s?bayan|al\s?nile|al\s?tarikh|damascus|diwan|farah|kfa|muna|sana|waseem\b/i.test(f)) return 'arabic';
+      if (/\bdevanagari|hindi|sanskrit|marathi|kohinoor|shree|mangal\b/i.test(f)) return 'devanagari';
+      if (/\bthai|krungthep|sathu|silom|thonburi|ayuthaya\b/i.test(f)) return 'thai';
+      if (/\bcyrillic|russian\b/i.test(f)) return 'cyrillic';
+      if (/\bgreek\b/i.test(f)) return 'greek';
+      if (/\bhebrew|raanana|corsiva\s?hebrew|new\s?peninim\b/i.test(f)) return 'hebrew';
+      if (/\bbengali|bangla\b/i.test(f)) return 'bengali';
+      if (/\btamil|inaimathi\b/i.test(f)) return 'tamil';
+      if (/\btelugu\b/i.test(f)) return 'telugu';
+      if (/\bgeorgian\b/i.test(f)) return 'georgian';
+      if (/\barmenian\b/i.test(f)) return 'armenian';
+      if (/\bethiopic|amharic\b/i.test(f)) return 'ethiopic';
+      if (/\bmyanmar\b/i.test(f)) return 'myanmar';
+      if (/\bkhmer\b/i.test(f)) return 'khmer';
+      if (/\bgurmukhi|punjabi\b/i.test(f)) return 'gurmukhi';
+      if (/\bkannada\b/i.test(f)) return 'kannada';
+      if (/\bmalayalam\b/i.test(f)) return 'malayalam';
+      if (/\bgujarati\b/i.test(f)) return 'gujarati';
+      if (/\boriya|odia\b/i.test(f)) return 'oriya';
+      if (/\bsinhala|sinhala\b/i.test(f)) return 'sinhala';
+      if (/\blao\b/i.test(f)) return 'lao';
+      if (/\btibetan\b/i.test(f)) return 'tibetan';
+      // MiSans 系列
+      if (/misan/i.test(f)) return 'cjk';
+      return 'latin';
     }
 
     function setPreviewMode(mode) {
@@ -1188,7 +1229,7 @@
 
     function resetAll() {
       currentFilter = 'all';
-      currentProperty = 'all';
+      currentLanguage = 'all';
       searchQuery = '';
       fontSize = 32;
       previewMode = 'names';
@@ -1205,7 +1246,7 @@
       document.querySelectorAll('.preview-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === 'names'));
       document.querySelectorAll('.align-btn').forEach(b => b.classList.toggle('active', b.dataset.align === 'left'));
       document.querySelectorAll('#catDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.cat === 'all'));
-      document.querySelectorAll('#propDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.prop === 'all'));
+      document.querySelectorAll('#langDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.lang === 'all'));
       render();
     }
 
@@ -1233,8 +1274,7 @@
       }
 
       if (currentFilter !== 'all') fonts = fonts.filter(f => f.category === currentFilter);
-      if (currentProperty === 'multi') fonts = fonts.filter(f => f.styleCount > 1);
-      if (currentProperty === 'single') fonts = fonts.filter(f => f.styleCount === 1);
+      if (currentLanguage !== 'all') fonts = fonts.filter(f => f.language === currentLanguage);
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         fonts = fonts.filter(f => f.family.toLowerCase().includes(q));
@@ -1870,7 +1910,7 @@
       }
 
       allFonts = Array.from(familyMap.values()).map(f => ({
-        ...f, category: classifyFont(f.family), styleCount: f.styles.length
+        ...f, category: classifyFont(f.family), language: classifyLanguage(f.family), styleCount: f.styles.length
       }));
       allFonts.sort((a, b) => a.family.localeCompare(b.family));
       render();
@@ -1998,6 +2038,7 @@
               family,
               styles: [file.name],
               category: classifyFont(family),
+              language: classifyLanguage(family),
               styleCount: 1
             };
             allFonts.push(newFont);
@@ -2055,6 +2096,7 @@
                   family,
                   styles: [file.name],
                   category: classifyFont(family),
+                  language: classifyLanguage(family),
                   styleCount: 1
                 };
                 allFonts.push(newFont);
@@ -2086,7 +2128,7 @@
               familyMap.get(font.family).styles.push(font.style);
             }
             allFonts = Array.from(familyMap.values()).map(f => ({
-              ...f, category: classifyFont(f.family), styleCount: f.styles.length
+              ...f, category: classifyFont(f.family), language: classifyLanguage(f.family), styleCount: f.styles.length
             }));
             allFonts.sort((a, b) => a.family.localeCompare(b.family));
             render();
@@ -2123,7 +2165,7 @@
                 familyMap.get(font.family).styles.push(font.style);
               }
               allFonts = Array.from(familyMap.values()).map(f => ({
-                ...f, category: classifyFont(f.family), styleCount: f.styles.length
+                ...f, category: classifyFont(f.family), language: classifyLanguage(f.family), styleCount: f.styles.length
               }));
               allFonts.sort((a, b) => a.family.localeCompare(b.family));
               render();
@@ -2146,6 +2188,10 @@
     }
 
     function showAddFolderBanner() {
+      // Only show once — remember dismissal in localStorage
+      try {
+        if (localStorage.getItem('fontssss_banner_dismissed')) return;
+      } catch (e) {}
       // Subtle banner at top of grid area prompting to add downloaded font folders
       const app = document.getElementById('app');
       const banner = document.createElement('div');
@@ -2154,9 +2200,15 @@
       banner.innerHTML = `
         <span>💡 已加载系统已安装字体。如需预览已下载但未安装的字体，可添加字体文件夹（如 Downloads），下次打开会自动加载。</span>
         <button onclick="addFontFolder()" style="padding:6px 16px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--text);font-size:13px;cursor:pointer;white-space:nowrap;font-family:inherit">添加文件夹</button>
-        <button onclick="this.parentElement.style.display='none'" style="border:none;background:none;color:var(--text-secondary);cursor:pointer;font-size:16px;padding:0 4px;line-height:1">×</button>
+        <button onclick="dismissBanner()" style="border:none;background:none;color:var(--text-secondary);cursor:pointer;font-size:16px;padding:0 4px;line-height:1">×</button>
       `;
       app.parentElement.insertBefore(banner, app);
+    }
+
+    function dismissBanner() {
+      const banner = document.getElementById('addFolderBanner');
+      if (banner) banner.style.display = 'none';
+      try { localStorage.setItem('fontssss_banner_dismissed', '1'); } catch (e) {}
     }
 
     function showPickerUI() {
