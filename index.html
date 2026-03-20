@@ -528,7 +528,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 8px 16px;
+      padding: 8px 0;
       border-radius: 8px;
       transition: background 0.2s;
     }
@@ -570,29 +570,6 @@
       display: flex;
       flex-direction: column;
       background: var(--bg);
-    }
-
-    .glyph-metrics-info {
-      padding: 16px 40px;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
-      color: var(--text-secondary);
-      display: flex;
-      gap: 24px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    }
-
-    .glyph-metrics-info-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .glyph-metrics-info-item .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      display: inline-block;
     }
 
     .glyph-metrics-canvas-wrap {
@@ -940,10 +917,6 @@
     </div>
     <div class="glyph-body">
       <div class="glyph-metrics-panel" id="glyphMetricsPanel">
-        <div class="glyph-metrics-info" id="glyphMetricsInfo">
-          <div class="glyph-metrics-info-item"><span class="dot" style="background:#e74c3c"></span> Glyph name</div>
-          <div class="glyph-metrics-info-item"><span class="dot" style="background:#3498db"></span> Unicode</div>
-        </div>
         <div class="glyph-metrics-canvas-wrap">
           <canvas id="glyphMetricsCanvas" width="380" height="400"></canvas>
         </div>
@@ -1437,19 +1410,12 @@
       const target = document.querySelector(`.glyph-cell[data-cp="${cp}"]`);
       if (target) target.classList.add('glyph-selected');
 
-      // Update metrics info bar
-      const hex = cp.toString(16).toUpperCase().padStart(4, '0');
-      const ch = String.fromCodePoint(cp);
-      const glyphName = getUnicodeName(cp);
-      document.getElementById('glyphMetricsInfo').innerHTML = `
-        <div class="glyph-metrics-info-item"><span class="dot" style="background:#e74c3c"></span> ${glyphName}</div>
-        <div class="glyph-metrics-info-item"><span class="dot" style="background:#3498db"></span> U+${hex}</div>
-      `;
-
       // Draw metrics canvas
       drawGlyphMetrics(cp, family);
 
       // Update details
+      const hex = cp.toString(16).toUpperCase().padStart(4, '0');
+      const ch = String.fromCodePoint(cp);
       const details = document.getElementById('glyphMetricsDetails');
       if (currentOTFont) {
         const glyph = currentOTFont.charToGlyph(ch);
@@ -1559,19 +1525,11 @@
         }
       }
 
-      // Offset labels that are too close
-      const minGap = 16;
       dedupedMetrics.sort((a, b) => a.y - b.y);
-      for (let i = 1; i < dedupedMetrics.length; i++) {
-        const prevLabelY = dedupedMetrics[i - 1].y + (dedupedMetrics[i - 1].labelOffset || 0);
-        const gap = dedupedMetrics[i].y - prevLabelY;
-        if (gap < minGap) {
-          dedupedMetrics[i].labelOffset = minGap - gap;
-        }
-      }
 
       // Draw metric lines and labels
       ctx.font = '11px -apple-system, sans-serif';
+      ctx.textBaseline = 'middle';
       for (const m of dedupedMetrics) {
         // Dashed line
         ctx.strokeStyle = labelGray;
@@ -1583,13 +1541,13 @@
         ctx.lineTo(W, m.y);
         ctx.stroke();
         ctx.setLineDash([]);
-        // Label — left aligned
+        // Label — left aligned, vertically centered with line
         ctx.globalAlpha = 0.8;
         ctx.fillStyle = labelGray;
         ctx.textAlign = 'left';
-        const labelY = m.y - 6 + (m.labelOffset || 0);
-        ctx.fillText(m.name, 8, labelY);
+        ctx.fillText(m.name, 8, m.y);
       }
+      ctx.textBaseline = 'alphabetic';
       ctx.globalAlpha = 1;
 
       // Draw glyph centered horizontally
