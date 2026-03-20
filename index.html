@@ -44,11 +44,17 @@
       display: flex;
       align-items: stretch;
       border-bottom: 1px solid var(--border);
-      background: var(--bg);
+      background: rgba(245, 245, 240, 0.8);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
       position: sticky;
       top: 0;
       z-index: 100;
       height: 150px;
+    }
+
+    body.dark header {
+      background: rgba(26, 26, 26, 0.8);
     }
 
     .logo {
@@ -787,8 +793,8 @@
 
       <!-- Font size slider -->
       <div class="size-control">
-        <span class="size-label" id="sizeLabel">42px</span>
-        <input type="range" class="size-slider" id="sizeSlider" min="24" max="160" value="42" />
+        <span class="size-label" id="sizeLabel">32px</span>
+        <input type="range" class="size-slider" id="sizeSlider" min="24" max="160" value="32" />
       </div>
     </div>
 
@@ -874,7 +880,7 @@
     let currentProperty = 'all';
     let currentTab = 'all';
     let searchQuery = '';
-    let fontSize = 42;
+    let fontSize = 32;
     let previewMode = 'names';
     let textAlign = 'left';
     let customText = '';
@@ -1004,7 +1010,7 @@
       currentFilter = 'all';
       currentProperty = 'all';
       searchQuery = '';
-      fontSize = 42;
+      fontSize = 32;
       previewMode = 'names';
       textAlign = 'left';
       customText = '';
@@ -1012,8 +1018,8 @@
       document.getElementById('searchBox').style.display = 'none';
       document.getElementById('customText').value = '';
       document.getElementById('customText').style.display = 'none';
-      document.getElementById('sizeSlider').value = 42;
-      document.getElementById('sizeLabel').textContent = '42px';
+      document.getElementById('sizeSlider').value = 32;
+      document.getElementById('sizeLabel').textContent = '32px';
       document.body.classList.remove('dark');
       document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.classList.contains('light-btn')));
       document.querySelectorAll('.preview-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === 'names'));
@@ -1378,29 +1384,45 @@
       const baselineY = 40 + ascender * scale;
       const leftPad = 80;
 
-      // Metric lines
-      const metrics = [
-        { name: 'Ascender', y: baselineY - ascender * scale, color: '#e74c3c' },
-        { name: 'Cap height', y: baselineY - capHeight * scale, color: '#e67e22' },
-        { name: 'x-height', y: baselineY - xHeight * scale, color: '#2ecc71' },
-        { name: 'Baseline', y: baselineY, color: '#3498db' },
-        { name: 'Descender', y: baselineY - descender * scale, color: '#9b59b6' },
+      // Metric lines — all gray, left-aligned labels
+      const lineColor2 = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
+      const labelGray = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)';
+      const rawMetrics = [
+        { name: 'Ascender', y: baselineY - ascender * scale },
+        { name: 'Cap height', y: baselineY - capHeight * scale },
+        { name: 'x-height', y: baselineY - xHeight * scale },
+        { name: 'Baseline', y: baselineY },
+        { name: 'Descender', y: baselineY - descender * scale },
       ];
 
-      // Deduplicate lines that are too close (< 14px apart) — offset labels
-      const minGap = 16;
-      const sortedMetrics = [...metrics].sort((a, b) => a.y - b.y);
-      for (let i = 1; i < sortedMetrics.length; i++) {
-        if (sortedMetrics[i].y - sortedMetrics[i - 1].y < minGap) {
-          sortedMetrics[i].labelOffset = (sortedMetrics[i].labelOffset || 0) + minGap - (sortedMetrics[i].y - sortedMetrics[i - 1].y);
+      // Remove duplicate lines (same pixel position within 2px)
+      const dedupedMetrics = [];
+      const usedY = [];
+      for (const m of rawMetrics) {
+        const tooClose = usedY.some(y => Math.abs(y - m.y) < 3);
+        if (!tooClose) {
+          dedupedMetrics.push(m);
+          usedY.push(m.y);
         }
       }
 
-      // Draw metric lines
+      // Offset labels that are too close
+      const minGap = 16;
+      dedupedMetrics.sort((a, b) => a.y - b.y);
+      for (let i = 1; i < dedupedMetrics.length; i++) {
+        const prevLabelY = dedupedMetrics[i - 1].y + (dedupedMetrics[i - 1].labelOffset || 0);
+        const gap = dedupedMetrics[i].y - prevLabelY;
+        if (gap < minGap) {
+          dedupedMetrics[i].labelOffset = minGap - gap;
+        }
+      }
+
+      // Draw metric lines and labels
       ctx.font = '11px -apple-system, sans-serif';
-      for (const m of sortedMetrics) {
-        ctx.strokeStyle = m.color;
-        ctx.globalAlpha = 0.5;
+      for (const m of dedupedMetrics) {
+        // Dashed line
+        ctx.strokeStyle = labelGray;
+        ctx.globalAlpha = 0.6;
         ctx.lineWidth = 1;
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
@@ -1408,11 +1430,12 @@
         ctx.lineTo(W, m.y);
         ctx.stroke();
         ctx.setLineDash([]);
-        ctx.globalAlpha = 0.7;
-        ctx.fillStyle = m.color;
-        ctx.textAlign = 'right';
-        const labelY = m.y + 4 + (m.labelOffset || 0);
-        ctx.fillText(m.name, leftPad - 10, labelY);
+        // Label — left aligned
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = labelGray;
+        ctx.textAlign = 'left';
+        const labelY = m.y - 6 + (m.labelOffset || 0);
+        ctx.fillText(m.name, 8, labelY);
       }
       ctx.globalAlpha = 1;
 
