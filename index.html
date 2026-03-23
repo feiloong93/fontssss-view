@@ -622,7 +622,7 @@
       justify-content: center;
       position: relative;
       overflow: hidden;
-      padding: 20px 40px;
+      padding: 20px 0;
     }
 
     .glyph-metrics-canvas-wrap canvas {
@@ -1661,7 +1661,7 @@
     function drawMetricsPlaceholder() {
       const canvas = document.getElementById('glyphMetricsCanvas');
       const wrap = canvas.parentElement;
-      const W = wrap.clientWidth - 40;
+      const W = wrap.clientWidth;
       const H = wrap.clientHeight - 10;
       if (W <= 0 || H <= 0) return;
       const ctx = canvas.getContext('2d');
@@ -1681,7 +1681,7 @@
     function drawGlyphMetrics(cp, family) {
       const canvas = document.getElementById('glyphMetricsCanvas');
       const wrap = canvas.parentElement;
-      const W = wrap.clientWidth - 40;
+      const W = wrap.clientWidth;
       const H = wrap.clientHeight - 10;
       if (W <= 0 || H <= 0) return;
       const ctx = canvas.getContext('2d');
@@ -1713,7 +1713,7 @@
 
       // Scale to fit canvas — use the smaller of height/width scale to avoid overflow
       const totalHeight = ascender - descender;
-      const leftPad = 90;
+      const leftPad = 120;
       const vScale = (H - 80) / totalHeight;
       const hScale = (W - leftPad - 40) / unitsPerEm;
       const scale = Math.min(vScale, hScale);
@@ -1757,11 +1757,11 @@
         ctx.lineTo(W, m.y);
         ctx.stroke();
         ctx.setLineDash([]);
-        // Label — left aligned, vertically centered with line
+        // Label — left aligned at 40px, vertically centered with line
         ctx.globalAlpha = 0.8;
         ctx.fillStyle = labelGray;
         ctx.textAlign = 'left';
-        ctx.fillText(m.name, 0, m.y);
+        ctx.fillText(m.name, 40, m.y);
       }
       ctx.textBaseline = 'alphabetic';
       ctx.globalAlpha = 1;
