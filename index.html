@@ -2851,7 +2851,7 @@
     let logoMouseSvg = null; // mouse position in SVG coords
     let logoSelectedSeg = null; // currently dragged segment index
     const LOGO_FONT_URL = 'https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.ttf';
-    const LOGO_NODE_RADIUS = 999; // show all nodes when mouse is in logo area
+    const LOGO_NODE_RADIUS = 60; // proximity radius in SVG units to show nodes
 
     async function initLogo() {
       try {
@@ -2950,8 +2950,8 @@
 
       if (op > 0.01) {
         let px=0, py=0;
-        const anchorR = 2.0;
-        const handleR = 1.5;
+        const anchorR = 1.2;
+        const handleR = 0.8;
 
         for (let i=0; i<logoPathData.length; i++) {
           const c = logoPathData[i];
