@@ -902,7 +902,7 @@
       <!-- Categories dropdown -->
       <div class="dropdown" id="catDropdown">
         <button class="tool-item" onclick="toggleDropdown('catDropdown')">
-          Categories
+          <span id="catLabel">Categories</span>
           <svg viewBox="0 0 24 24" width="10" height="10"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="dropdown-menu">
@@ -1276,6 +1276,9 @@
     function setCategory(cat) {
       currentFilter = cat;
       document.querySelectorAll('#catDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.cat === cat));
+      const activeItem = document.querySelector('#catDropdown .dropdown-item.active');
+      const btn = document.querySelector('#catDropdown > .tool-item');
+      btn.firstChild.textContent = cat === 'all' ? 'Categories' : activeItem.textContent;
       document.getElementById('catDropdown').classList.remove('open');
       render();
     }
@@ -1283,6 +1286,9 @@
     function setLanguage(lang) {
       currentLanguage = lang;
       document.querySelectorAll('#langDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.lang === lang));
+      const activeItem = document.querySelector('#langDropdown .dropdown-item.active');
+      const btn = document.querySelector('#langDropdown > .tool-item');
+      btn.firstChild.textContent = lang === 'all' ? 'Language' : activeItem.textContent;
       document.getElementById('langDropdown').classList.remove('open');
       render();
     }
