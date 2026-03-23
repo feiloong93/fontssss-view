@@ -626,55 +626,6 @@
       padding: 20px 0;
     }
 
-    .glyph-details-toggle {
-      position: absolute;
-      top: 12px;
-      left: 40px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: var(--text-secondary);
-      cursor: pointer;
-      z-index: 5;
-      -webkit-user-select: none;
-      user-select: none;
-    }
-
-    .glyph-details-toggle .toggle-track {
-      width: 32px;
-      height: 18px;
-      border-radius: 9px;
-      background: var(--border);
-      position: relative;
-      transition: background 0.2s;
-    }
-
-    .glyph-details-toggle .toggle-track::after {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: var(--bg);
-      transition: transform 0.2s;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
-    }
-
-    .glyph-details-toggle.active .toggle-track {
-      background: var(--text);
-    }
-
-    .glyph-details-toggle.active .toggle-track::after {
-      transform: translateX(14px);
-    }
-
-    .glyph-details-toggle.active {
-      color: var(--text);
-    }
-
     .glyph-metrics-canvas-wrap canvas {
       display: block;
     }
@@ -1023,10 +974,6 @@
     <div class="glyph-body">
       <div class="glyph-metrics-panel" id="glyphMetricsPanel">
         <div class="glyph-metrics-canvas-wrap">
-          <div class="glyph-details-toggle" id="glyphDetailsToggle" onclick="toggleGlyphDetails()">
-            <span class="toggle-track"></span>
-            <span>Details</span>
-          </div>
           <canvas id="glyphMetricsCanvas" width="380" height="400"></canvas>
         </div>
         <div class="glyph-metrics-details" id="glyphMetricsDetails"></div>
@@ -1049,7 +996,6 @@
     let previewMode = 'names';
     let textAlign = 'left';
     let customText = '';
-    let showGlyphDetails = false;
 
     // ---- Favorites (persisted in localStorage) ----
     let favorites = new Set();
@@ -1695,14 +1641,6 @@
       return { cps: [...new Set(cps)], font };
     }
 
-    function toggleGlyphDetails() {
-      showGlyphDetails = !showGlyphDetails;
-      document.getElementById('glyphDetailsToggle').classList.toggle('active', showGlyphDetails);
-      if (selectedGlyphCP != null && currentGlyphFont) {
-        drawGlyphMetrics(selectedGlyphCP, currentGlyphFont);
-      }
-    }
-
     function selectGlyph(cp, family) {
       selectedGlyphCP = cp;
       // Highlight in grid
@@ -1873,79 +1811,6 @@
       }
       ctx.fill();
       ctx.globalAlpha = 1;
-
-      // Draw anchor points when Details mode is on
-      if (showGlyphDetails) {
-        const onCurveRadius = 3.5;
-        const offCurveRadius = 3;
-
-        // Draw path outline
-        ctx.beginPath();
-        for (const cmd of cmds) {
-          switch (cmd.type) {
-            case 'M': ctx.moveTo(cmd.x, cmd.y); break;
-            case 'L': ctx.lineTo(cmd.x, cmd.y); break;
-            case 'Q': ctx.quadraticCurveTo(cmd.x1, cmd.y1, cmd.x, cmd.y); break;
-            case 'C': ctx.bezierCurveTo(cmd.x1, cmd.y1, cmd.x2, cmd.y2, cmd.x, cmd.y); break;
-            case 'Z': ctx.closePath(); break;
-          }
-        }
-        ctx.strokeStyle = textColor;
-        ctx.globalAlpha = 0.5;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-
-        // Draw control handles (lines from on-curve to off-curve)
-        ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)';
-        ctx.lineWidth = 1;
-        for (const cmd of cmds) {
-          if (cmd.type === 'Q') {
-            ctx.beginPath();
-            ctx.moveTo(cmd.x, cmd.y);
-            ctx.lineTo(cmd.x1, cmd.y1);
-            ctx.stroke();
-          } else if (cmd.type === 'C') {
-            ctx.beginPath();
-            ctx.moveTo(cmd.x, cmd.y);
-            ctx.lineTo(cmd.x2, cmd.y2);
-            ctx.stroke();
-          }
-        }
-
-        // Draw off-curve control points (hollow circles)
-        for (const cmd of cmds) {
-          const offPts = [];
-          if (cmd.type === 'Q') offPts.push({ x: cmd.x1, y: cmd.y1 });
-          else if (cmd.type === 'C') {
-            offPts.push({ x: cmd.x1, y: cmd.y1 });
-            offPts.push({ x: cmd.x2, y: cmd.y2 });
-          }
-          for (const pt of offPts) {
-            ctx.beginPath();
-            ctx.arc(pt.x, pt.y, offCurveRadius, 0, Math.PI * 2);
-            ctx.fillStyle = bgColor;
-            ctx.fill();
-            ctx.strokeStyle = textColor;
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-          }
-        }
-
-        // Draw on-curve points (filled circles)
-        for (const cmd of cmds) {
-          if (cmd.type === 'Z') continue;
-          if (cmd.x !== undefined && cmd.y !== undefined) {
-            ctx.beginPath();
-            ctx.arc(cmd.x, cmd.y, onCurveRadius, 0, Math.PI * 2);
-            ctx.fillStyle = textColor;
-            ctx.fill();
-            ctx.strokeStyle = bgColor;
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-          }
-        }
-      }
     }
 
     function getStyleCSS() {
