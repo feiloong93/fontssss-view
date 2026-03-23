@@ -471,9 +471,8 @@
       line-height: 1.2;
       margin-bottom: 20px;
       min-height: 60px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      overflow: visible;
+      word-break: break-all;
       transition: letter-spacing 0.3s;
     }
 
@@ -1196,8 +1195,9 @@
     function getPreviewText(font, index) {
       if (customText) return customText;
       const scriptText = getScriptPreview(font.family);
+      const isCJK = font.language === 'cjk' || font.displayName;
       switch (previewMode) {
-        case 'excerpts': return scriptText || EXCERPTS[index % EXCERPTS.length];
+        case 'excerpts': return isCJK ? '滚滚长江东逝水' : (scriptText || EXCERPTS[index % EXCERPTS.length]);
         case 'numbers': return '0123456789';
         case 'names': default: return scriptText || (font.displayName || font.family);
       }
