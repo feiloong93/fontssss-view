@@ -1251,7 +1251,8 @@
     </div>
     <div class="icon-ctx" id="iconCtx">
       <button class="icon-ctx-item" onclick="copyIconName()">复制名称</button>
-      <button class="icon-ctx-item" onclick="copyIconSVG()">复制符号（矢量）</button>
+      <button class="icon-ctx-item" onclick="copyIconSymbol()">复制符号</button>
+      <button class="icon-ctx-item" onclick="copyIconSVG()">复制矢量</button>
       <button class="icon-ctx-item" onclick="copyIconImage()">复制图像</button>
     </div>
   </div>
@@ -3128,36 +3129,42 @@
       navigator.clipboard.writeText('U+' + hex).then(() => { showToast('已复制 Unicode'); closeIconCtx(); });
     }
 
+    function copyIconSymbol() {
+      if (!selectedIconGlyph) return;
+      const char = String.fromCodePoint(selectedIconGlyph.unicode);
+      navigator.clipboard.writeText(char).then(() => { showToast('\u5df2\u590d\u5236\u7b26\u53f7'); closeIconCtx(); });
+    }
+
+    function getIconSVGString(size) {
+      if (!selectedIconGlyph || !iconOTFont) return null;
+      var g = selectedIconGlyph.glyph;
+      var unitsPerEm = iconOTFont.unitsPerEm || 1000;
+      var scale = size / unitsPerEm;
+      var ascender = iconOTFont.ascender || unitsPerEm;
+      var path = g.getPath(0, ascender * scale, size);
+      var pathData = path.toPathData(2);
+      return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + ' ' + size + '" width="' + size + '" height="' + size + '"><path d="' + pathData + '" fill="currentColor"/></svg>';
+    }
+
     function copyIconSVG() {
-      if (!selectedIconGlyph || !iconOTFont) return;
-      const g = selectedIconGlyph.glyph;
-      const path = g.getPath(0, 0, 1000);
-      const pathData = path.toPathData(2);
-      const bbox = g.getBoundingBox();
-      const w = Math.max(bbox.x2 - bbox.x1, 1);
-      const h = Math.max(bbox.y2 - bbox.y1, 1);
-      const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + bbox.x1 + ' ' + (-bbox.y2) + ' ' + w + ' ' + h + '" width="' + w + '" height="' + h + '"><path d="' + pathData + '" fill="currentColor" transform="scale(1,-1)"/></svg>';
-      navigator.clipboard.writeText(svg).then(() => { showToast('已复制符号（矢量）'); closeIconCtx(); });
+      var svg = getIconSVGString(1000);
+      if (!svg) return;
+      navigator.clipboard.writeText(svg).then(() => { showToast('\u5df2\u590d\u5236\u77e2\u91cf'); closeIconCtx(); });
     }
 
     function copyIconImage() {
-      if (!selectedIconGlyph || !iconOTFont) return;
-      const g = selectedIconGlyph.glyph;
-      const path = g.getPath(0, 0, 512);
-      const pathData = path.toPathData(2);
-      const bbox = g.getBoundingBox();
-      const w = Math.max(bbox.x2 - bbox.x1, 1);
-      const h = Math.max(bbox.y2 - bbox.y1, 1);
-      const svgStr = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + bbox.x1 + ' ' + (-bbox.y2) + ' ' + w + ' ' + h + '" width="512" height="512"><path d="' + pathData + '" fill="black" transform="scale(1,-1)"/></svg>';
-      const img = new Image();
+      var svgStr = getIconSVGString(512);
+      if (!svgStr) return;
+      svgStr = svgStr.replace('currentColor', 'black');
+      var img = new Image();
       img.onload = function() {
-        const canvas = document.createElement('canvas');
+        var canvas = document.createElement('canvas');
         canvas.width = 512;
         canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, 512, 512);
+        var c = canvas.getContext('2d');
+        c.drawImage(img, 0, 0, 512, 512);
         canvas.toBlob(function(blob) {
-          navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(() => { showToast('已复制图像'); closeIconCtx(); });
+          navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(() => { showToast('\u5df2\u590d\u5236\u56fe\u50cf'); closeIconCtx(); });
         }, 'image/png');
       };
       img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
