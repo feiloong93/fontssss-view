@@ -1481,6 +1481,17 @@
       if (document.getElementById('glyphView').classList.contains('active')) {
         hideGlyphView();
       }
+      // Reset search and filters to return to default view
+      searchQuery = '';
+      document.getElementById('searchBox').value = '';
+      document.getElementById('searchBox').style.display = 'none';
+      customText = '';
+      document.getElementById('customText').value = '';
+      currentFilter = 'all';
+      currentProperty = 'all';
+      document.querySelectorAll('#catDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.cat === 'all'));
+      document.querySelectorAll('#propDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.prop === 'all'));
+      switchTab('all');
     }
 
     async function showGlyphView(family, styleCount) {
