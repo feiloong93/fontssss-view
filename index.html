@@ -863,7 +863,59 @@
 
     /* ===== ICON VIEW ===== */
     .icon-view { display: none; }
-    .icon-view.active { display: block; }
+    .icon-view.active { display: flex; flex-direction: column; }
+
+    .icon-body { display: flex; flex: 1; min-height: 0; }
+
+    .icon-sidebar {
+      width: 180px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 12px 0;
+      position: sticky;
+      top: 214px;
+      height: calc(100vh - 214px);
+      background: var(--bg);
+    }
+
+    .icon-cat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+    }
+    .icon-cat-item:hover { color: var(--text); background: var(--hover-bg); }
+    .icon-cat-item.active { color: var(--text); font-weight: 600; }
+
+    .icon-main { flex: 1; min-width: 0; }
+
+    .icon-weight-select {
+      font-size: 12px;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 24px 4px 8px;
+      background: transparent;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 6px center;
+      margin-left: auto;
+    }
 
     .icon-toolbar {
       display: flex;
@@ -1023,7 +1075,7 @@
       padding: 8px 4px;
     }
     .icon-cell:hover { background: var(--hover-bg); z-index: 1; }
-    .icon-cell.icon-selected { background: var(--text); color: var(--bg); z-index: 2; }
+    .icon-cell.icon-selected { outline: 2px solid var(--text); outline-offset: -2px; z-index: 2; }
 
     .icon-cell .icon-glyph { font-size: 28px; line-height: 1; }
 
@@ -1040,8 +1092,7 @@
       transition: opacity 0.15s;
     }
     .icon-cell:hover .icon-name { opacity: 1; }
-    .icon-cell.icon-selected .icon-name { color: var(--bg); opacity: 0.7; }
-    .icon-cell.icon-selected .icon-glyph { color: var(--bg); }
+    .icon-cell.icon-selected .icon-name { opacity: 1; }
 
     .icon-ctx {
       position: fixed;
@@ -1236,17 +1287,21 @@
     <div class="icon-toolbar">
       <div class="icon-toolbar-left">
         <span class="icon-font-name" id="iconFontName">HyperOS Symbols UI</span>
-        <span class="icon-font-count" id="iconFontCount"></span>
         <div style="width:1px;height:24px;background:var(--border);flex-shrink:0"></div>
         <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:var(--text-secondary);fill:none;stroke-width:2;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" class="icon-search" id="iconSearch" placeholder="搜索图标名称..." />
       </div>
     </div>
     <div class="icon-axes" id="iconAxes"></div>
-    <div id="iconContent">
-      <div class="icon-empty" id="iconEmpty">
-        <div class="spinner"></div>
-        <p>正在加载图标库...</p>
+    <div class="icon-body">
+      <div class="icon-sidebar" id="iconSidebar"></div>
+      <div class="icon-main">
+        <div id="iconContent">
+          <div class="icon-empty" id="iconEmpty">
+            <div class="spinner"></div>
+            <p>正在加载图标库...</p>
+          </div>
+        </div>
       </div>
     </div>
     <div class="icon-ctx" id="iconCtx">
@@ -2973,6 +3028,64 @@
     let selectedIconGlyph = null;
     let iconFontFamily = 'HyperOSIcons';
     let iconFontBuffer = null;
+    let iconCategory = 'all';
+
+    const ICON_CATEGORIES = {
+      'all': '全部',
+      'action': '操作',
+      'media': '媒体',
+      'communication': '通信',
+      'file': '文件',
+      'time': '时间',
+      'navigation': '导航',
+      'editing': '编辑',
+      'social': '社交',
+      'other': '其他'
+    };
+
+    const ICON_CAT_MAP = {
+      'action': ['search','ok','close','close_2','back','add','add_circle','remove','delete','clear','refresh','reset','replace','redo','undo','sort','select_all','expand_more','expand_less','chevron_backward','chevron_forward','zoom_out','more','more_circle','menu','settings','tune','filter','rotate_left'],
+      'media': ['play','pause','volume_up','volume_off','recording','call_recording','app_recording','recording_tape','music','short_video','mini_drama','movie','screen_capture','screen_mirroring','trim','photos','album','image','background','map_album'],
+      'communication': ['phone','messages','email','send','forward','reply','reply_all','notifications','carrier','community','contacts','contacts_circle','contacts_book','remove_contact','blocklist'],
+      'file': ['file','folder','folder_fill','add_folder','move_file','convert_file','copy','paste','cut','rename','save','download','upload_cloud','import','backup','file_downloads','top_downloads','merge'],
+      'time': ['alarm','world_clock','recent','stopwatch','timer','years','months','weeks','th_1','th_2','th_3','th_4','th_5','th_6','th_7','th_8','th_9','th_10','th_11','th_12','th_13','th_14','th_15','th_16','th_17','th_18','th_19','th_20','th_21','th_22','th_23','th_24','th_25','th_26','th_27','th_28','th_29','th_30','th_31'],
+      'navigation': ['location','all','list_view','grid_view','sidebar','horizontal_split','vertical_split','layers','mind_map'],
+      'editing': ['edit','create','pin','unpin','link','scan','ai_scan','translate','read','mark_all_as_read','mark_as_read','mark_ras_unread','add_bookmark','starred','unstar','report','info','help','answer'],
+      'social': ['favorites','favorites_fill','share','store','promotions','bank_cards','coupon','child','gift','rocket','book','theme','cloud_fill','notes','notes_fill','tasks','playlist'],
+      'media_ctrl': ['mic','mic_slash','hide','show','lock','unlock','search_device','update']
+    };
+
+    function getIconCategory(name) {
+      for (var cat in ICON_CAT_MAP) {
+        if (ICON_CAT_MAP[cat].indexOf(name) !== -1) return cat;
+      }
+      return 'other';
+    }
+
+    function renderIconSidebar() {
+      var counts = {};
+      for (var cat in ICON_CATEGORIES) counts[cat] = 0;
+      iconGlyphs.forEach(function(g) {
+        var c = getIconCategory(g.name);
+        if (counts[c] !== undefined) counts[c]++;
+        counts['all']++;
+      });
+      var sb = document.getElementById('iconSidebar');
+      var html = '';
+      for (var cat in ICON_CATEGORIES) {
+        if (cat !== 'all' && cat !== 'other' && (!counts[cat] || counts[cat] === 0)) continue;
+        html += '<button class="icon-cat-item' + (iconCategory === cat ? ' active' : '') + '" data-cat="' + cat + '" onclick="setIconCategory(\'' + cat + '\')">' + ICON_CATEGORIES[cat] + ' <span style="margin-left:auto;font-size:11px;opacity:0.5">' + (counts[cat] || 0) + '</span></button>';
+      }
+      sb.innerHTML = html;
+    }
+
+    function setIconCategory(cat) {
+      iconCategory = cat;
+      document.querySelectorAll('.icon-cat-item').forEach(function(el) {
+        el.classList.toggle('active', el.dataset.cat === cat);
+      });
+      renderIconGrid();
+    }
 
     async function initIconView() {
       try {
@@ -3018,10 +3131,11 @@
 
         const displayName = (font.names.fontFamily && font.names.fontFamily.en) || fileName;
         document.getElementById('iconFontName').textContent = displayName;
-        document.getElementById('iconFontCount').textContent = iconGlyphs.length + ' 个图标';
-        document.getElementById('navIconCount').textContent = iconGlyphs.length;
+
+        document.getElementById('navIconCount').textContent = iconGlyphs.length || '';
         document.getElementById('iconEmpty').style.display = 'none';
         renderIconAxes();
+        renderIconSidebar();
         renderIconGrid();
       } catch (err) {
         showToast('解析字体失败: ' + err.message);
@@ -3031,13 +3145,38 @@
     function renderIconAxes() {
       const container = document.getElementById('iconAxes');
       if (!iconAxesData.length) { container.innerHTML = ''; return; }
-      container.innerHTML = iconAxesData.map(a =>
-        '<div class="icon-axis-control">' +
-        '<span class="icon-axis-label">' + a.name + '</span>' +
-        '<input type="range" class="icon-axis-slider" min="' + a.min + '" max="' + a.max + '" value="' + a.default + '" step="' + ((a.max - a.min) > 10 ? 1 : 0.01) + '" data-tag="' + a.tag + '" oninput="updateIconAxis(this)" />' +
-        '<span class="icon-axis-value" id="iconAxisVal_' + a.tag + '">' + Math.round(a.default) + '</span>' +
-        '</div>'
-      ).join('');
+      var html = '';
+      iconAxesData.forEach(function(a) {
+        html += '<div class="icon-axis-control">';
+        html += '<span class="icon-axis-label">' + a.name + '</span>';
+        html += '<input type="range" class="icon-axis-slider" min="' + a.min + '" max="' + a.max + '" value="' + a.default + '" step="' + ((a.max - a.min) > 10 ? 1 : 0.01) + '" data-tag="' + a.tag + '" oninput="updateIconAxis(this)" />';
+        html += '<span class="icon-axis-value" id="iconAxisVal_' + a.tag + '">' + Math.round(a.default) + '</span>';
+        html += '</div>';
+      });
+      // Add weight preset dropdown if wght axis exists
+      var wghtAxis = iconAxesData.find(function(a) { return a.tag === 'wght'; });
+      if (wghtAxis) {
+        html += '<select class="icon-weight-select" id="iconWeightSelect" onchange="setIconWeight(this.value)">';
+        var presets = [100,200,300,400,500,600,700,800,900];
+        var names = ['Thin','ExtraLight','Light','Regular','Medium','SemiBold','Bold','ExtraBold','Black'];
+        presets.forEach(function(w, i) {
+          if (w >= wghtAxis.min && w <= wghtAxis.max) {
+            html += '<option value="' + w + '"' + (w === Math.round(wghtAxis.default) ? ' selected' : '') + '>' + names[i] + ' ' + w + '</option>';
+          }
+        });
+        html += '</select>';
+      }
+      container.innerHTML = html;
+    }
+
+    function setIconWeight(val) {
+      val = parseFloat(val);
+      iconVariationSettings['wght'] = val;
+      var slider = document.querySelector('.icon-axis-slider[data-tag="wght"]');
+      if (slider) slider.value = val;
+      var label = document.getElementById('iconAxisVal_wght');
+      if (label) label.textContent = Math.round(val);
+      applyIconVariation();
     }
 
     function updateIconAxis(slider) {
@@ -3045,6 +3184,10 @@
       const val = parseFloat(slider.value);
       iconVariationSettings[tag] = val;
       document.getElementById('iconAxisVal_' + tag).textContent = Math.round(val);
+      if (tag === 'wght') {
+        var sel = document.getElementById('iconWeightSelect');
+        if (sel) sel.value = Math.round(val);
+      }
       applyIconVariation();
     }
 
@@ -3063,7 +3206,13 @@
     function renderIconGrid() {
       if (!iconGlyphs.length) return;
       const q = iconSearchQuery.toLowerCase();
-      const filtered = q ? iconGlyphs.filter(g => g.name.toLowerCase().includes(q) || ('U+' + g.unicode.toString(16).toUpperCase()).toLowerCase().includes(q)) : iconGlyphs;
+      var filtered = iconGlyphs;
+      if (iconCategory !== 'all') {
+        filtered = filtered.filter(function(g) { return getIconCategory(g.name) === iconCategory; });
+      }
+      if (q) {
+        filtered = filtered.filter(g => g.name.toLowerCase().includes(q) || ('U+' + g.unicode.toString(16).toUpperCase()).toLowerCase().includes(q));
+      }
       const variation = getIconVariationCSS();
       const variationStyle = variation ? 'font-variation-settings:' + variation + ';' : '';
       const content = document.getElementById('iconContent');
@@ -3078,7 +3227,7 @@
       }
       html += '</div>';
       content.innerHTML = html;
-      document.getElementById('iconFontCount').textContent = filtered.length + ' 个图标' + (q ? ' (共 ' + iconGlyphs.length + ')' : '');
+
     }
 
     document.getElementById('iconSearch').addEventListener('input', (e) => {
@@ -3116,6 +3265,17 @@
 
     document.addEventListener('click', function(e) {
       if (!e.target.closest('.icon-ctx')) closeIconCtx();
+      // Left-click on icon cell: select it; click elsewhere: deselect
+      if (document.getElementById('iconView').classList.contains('active')) {
+        var cell = e.target.closest('.icon-cell');
+        if (cell) {
+          var unicode = parseInt(cell.dataset.unicode);
+          selectIcon(unicode);
+        } else if (!e.target.closest('.icon-ctx')) {
+          document.querySelectorAll('.icon-cell.icon-selected').forEach(function(c) { c.classList.remove('icon-selected'); });
+          selectedIconGlyph = null;
+        }
+      }
     });
 
     function copyIconName() {
