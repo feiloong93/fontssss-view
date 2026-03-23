@@ -468,10 +468,11 @@
     }
 
     .card-preview {
-      line-height: 1.2;
+      display: flex;
+      align-items: center;
+      line-height: 1.4;
       margin-bottom: 20px;
-      min-height: 60px;
-      max-height: 120px;
+      height: 120px;
       overflow: hidden;
       transition: letter-spacing 0.3s;
     }
@@ -718,9 +719,9 @@
     }
 
     /* Text align modes */
-    .card-preview.align-left { text-align: left; }
-    .card-preview.align-center { text-align: center; }
-    .card-preview.align-right { text-align: right; }
+    .card-preview.align-left { justify-content: flex-start; text-align: left; }
+    .card-preview.align-center { justify-content: center; text-align: center; }
+    .card-preview.align-right { justify-content: flex-end; text-align: right; }
 
     /* Star / Favorite */
     .star-btn {
@@ -1441,6 +1442,19 @@
           </div>
         </div>`;
       }).join('')}</div>`;
+
+      // Auto-fit: shrink font-size for previews that overflow their container
+      requestAnimationFrame(() => {
+        document.querySelectorAll('.card-preview').forEach(el => {
+          const maxH = el.clientHeight;
+          let size = parseFloat(el.style.fontSize);
+          // Quick check: if scrollHeight exceeds container, scale down
+          while (el.scrollHeight > maxH + 2 && size > 12) {
+            size = Math.max(12, size * 0.85);
+            el.style.fontSize = size + 'px';
+          }
+        });
+      });
     }
 
     // ---- Font info tooltip ----
