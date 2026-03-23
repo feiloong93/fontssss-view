@@ -852,7 +852,6 @@
       </button>
       <button class="nav-tab" id="addFolderBtn" onclick="addFontFolder()" title="添加本地字体文件夹" style="min-width:60px;font-size:18px;font-weight:300;color:var(--text-secondary)">
         <span class="tab-label">+</span>
-        <span class="tab-count" style="font-size:11px">添加文件夹</span>
       </button>
     </nav>
   </header>
@@ -922,6 +921,9 @@
         Your Text
       </button>
       <input type="text" class="tool-text-input" id="customText" placeholder="Type preview text..." />
+      <button class="tool-item" id="clearTextBtn" style="display:none;padding:8px;color:var(--text-secondary)" onclick="clearCustomText()" title="清除文案">
+        <svg viewBox="0 0 24 24" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
 
       <div class="tool-separator"></div>
 
@@ -2273,8 +2275,16 @@
 
     document.getElementById('customText').addEventListener('input', (e) => {
       customText = e.target.value;
+      document.getElementById('clearTextBtn').style.display = customText ? '' : 'none';
       render();
     });
+
+    function clearCustomText() {
+      customText = '';
+      document.getElementById('customText').value = '';
+      document.getElementById('clearTextBtn').style.display = 'none';
+      render();
+    }
 
     document.getElementById('sizeSlider').addEventListener('input', (e) => {
       fontSize = parseInt(e.target.value);
