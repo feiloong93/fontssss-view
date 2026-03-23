@@ -3139,18 +3139,21 @@
       if (!selectedIconGlyph || !iconOTFont) return null;
       var g = selectedIconGlyph.glyph;
       var upm = iconOTFont.unitsPerEm || 1000;
-      // getPath with y=0 at fontSize scale renders top-down (screen coords)
+      var asc = iconOTFont.ascender || upm;
+      var desc = iconOTFont.descender || 0;
+      // Use raw glyph path at 1:1 scale (font units, Y-up coordinate system)
       var path = g.getPath(0, 0, upm);
-      var bb = path.getBoundingBox();
-      var bw = bb.x2 - bb.x1;
-      var bh = bb.y2 - bb.y1;
-      if (bw < 1 || bh < 1) return null;
-      var pad = Math.max(bw, bh) * 0.05;
       var pathData = path.toPathData(2);
-      var vx = (bb.x1 - pad).toFixed(1);
-      var vy = (bb.y1 - pad).toFixed(1);
-      var vw = (bw + pad * 2).toFixed(1);
-      var vh = (bh + pad * 2).toFixed(1);
+      if (!pathData || pathData.length < 2) return null;
+      // In opentype.js getPath(0,0,fontSize), y=0 is the baseline
+      // ascender goes up (negative y in screen), descender goes down (positive y)
+      // So the full em square in screen coords is from y=-ascender to y=-descender
+      var advW = g.advanceWidth || upm;
+      // Use the em square as viewBox for consistent sizing
+      var vx = 0;
+      var vy = -asc;
+      var vw = Math.max(advW, upm);
+      var vh = asc - desc;
       return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vx + ' ' + vy + ' ' + vw + ' ' + vh + '" width="' + size + '" height="' + size + '"><path d="' + pathData + '" fill="currentColor"/></svg>';
     }
 
