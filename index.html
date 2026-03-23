@@ -1683,7 +1683,7 @@
         iconView.classList.remove('active');
         app.style.display = '';
         toolbar.style.display = '';
-        closeIconDetail();
+        closeIconCtx();
       }
       currentTab = tab;
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
