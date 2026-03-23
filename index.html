@@ -2828,6 +2828,13 @@
     document.getElementById('sizeSlider').addEventListener('input', (e) => {
       fontSize = parseInt(e.target.value);
       document.getElementById('sizeLabel').textContent = fontSize + 'px';
+      // Live update font-size without full re-render for smooth dragging
+      document.querySelectorAll('.card-preview').forEach(el => {
+        el.style.fontSize = fontSize + 'px';
+      });
+    });
+    document.getElementById('sizeSlider').addEventListener('change', (e) => {
+      fontSize = parseInt(e.target.value);
       render();
     });
 
