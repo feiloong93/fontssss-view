@@ -600,6 +600,7 @@
 
     .glyph-body {
       display: flex;
+      align-items: flex-start;
     }
 
     /* Left metrics panel — fixed/sticky while right side scrolls */
@@ -608,8 +609,8 @@
       border-right: 1px solid var(--border);
       flex-shrink: 0;
       position: sticky;
-      top: 70px;
-      height: calc(100vh - 70px);
+      top: 69px;
+      height: calc(100vh - 69px);
       display: flex;
       flex-direction: column;
       background: var(--bg);
@@ -1039,6 +1040,11 @@
     // ---- Copy ----
     function copyName(name) {
       navigator.clipboard.writeText(name).then(() => showToast(`Copied "${name}"`));
+    }
+
+    function copyChar(cp) {
+      const ch = String.fromCodePoint(cp);
+      navigator.clipboard.writeText(ch).then(() => showToast(`Copied "${ch}"`));
     }
 
     // ---- Classify font ----
@@ -1820,7 +1826,7 @@
         for (const cp of block.cps) {
           const ch = String.fromCodePoint(cp);
           const hex = cp.toString(16).toUpperCase().padStart(4, '0');
-          html += `<div class="glyph-cell" data-cp="${cp}" onclick="selectGlyph(${cp}, '${escapedFamily}')">
+          html += `<div class="glyph-cell" data-cp="${cp}" onclick="selectGlyph(${cp}, '${escapedFamily}');copyChar(${cp})">
             <span class="glyph-char" style="font-family:'${family}',sans-serif;${cssStyle}">${ch}</span>
             <span class="glyph-code">U+${hex}</span>
           </div>`;
