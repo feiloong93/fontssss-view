@@ -2708,8 +2708,8 @@
         // Fallback: show button to request permission
         app.innerHTML = `
           <div class="unsupported">
-            <h2>Load Your Local Fonts</h2>
-            <p style="margin-bottom:24px">Click the button below to grant font access permission.</p>
+            <h2>加载本地字体</h2>
+            <p style="margin-bottom:24px">点击下方按钮授权读取本地字体</p>
             <button class="pick-btn" id="grantBtn">🔤 Load Local Fonts</button>
             <p style="margin-top:16px;font-size:13px;color:var(--text-secondary)">
               Or <a href="#" id="folderFallback" style="color:var(--text);text-decoration:underline">choose a font folder</a> manually
@@ -2776,10 +2776,11 @@
     function showPickerUI() {
       document.getElementById('app').innerHTML = `
         <div class="unsupported">
-          <h2>Select Your Fonts Folder</h2>
-          <p style="margin-bottom:24px">Choose a folder containing font files (.ttf, .otf, .woff) to preview.</p>
-          <button class="pick-btn" onclick="pickFolder()">📁 Choose Font Folder</button>
-          <p style="margin-top:16px;font-size:13px;color:var(--text-secondary)">Tip on macOS: fonts are usually in <code>/Library/Fonts</code> or <code>~/Library/Fonts</code></p>
+          <h2>选择字体文件夹</h2>
+          <p style="margin-bottom:24px">当前浏览器不支持自动读取本地字体，请手动选择字体文件夹。</p>
+          <button class="pick-btn" onclick="pickFolder()">📁 选择文件夹</button>
+          <p style="margin-top:16px;font-size:13px;color:var(--text-secondary)">macOS 字体通常在 <code>/Library/Fonts</code> 或 <code>~/Library/Fonts</code></p>
+          <p style="margin-top:8px;font-size:13px;color:var(--text-secondary)">提示：使用 Chrome 打开可自动加载系统已安装字体</p>
         </div>`;
     }
 
