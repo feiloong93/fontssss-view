@@ -891,11 +891,13 @@
   <div class="toolbar">
     <!-- Row 1 -->
     <div class="toolbar-row toolbar-row-collapsible" id="toolbarRow1">
-      <button class="tool-item" id="searchToggle">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        Search
-      </button>
-      <input type="text" class="tool-search" id="searchBox" placeholder="Type to search..." style="display:none" />
+      <div style="display:flex;align-items:center;min-width:340px;flex:1">
+        <button class="tool-item" id="searchToggle">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Search
+        </button>
+        <input type="text" class="tool-search" id="searchBox" placeholder="Type to search..." style="flex:1" />
+      </div>
 
       <div class="tool-divider"></div>
 
@@ -919,7 +921,7 @@
       <!-- Language dropdown -->
       <div class="dropdown" id="langDropdown">
         <button class="tool-item" onclick="toggleDropdown('langDropdown')">
-          Language
+          <span id="langLabel">Language</span>
           <svg viewBox="0 0 24 24" width="10" height="10"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="dropdown-menu">
@@ -1277,8 +1279,7 @@
       currentFilter = cat;
       document.querySelectorAll('#catDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.cat === cat));
       const activeItem = document.querySelector('#catDropdown .dropdown-item.active');
-      const btn = document.querySelector('#catDropdown > .tool-item');
-      btn.firstChild.textContent = cat === 'all' ? 'Categories' : activeItem.textContent;
+      document.getElementById('catLabel').textContent = cat === 'all' ? 'Categories' : activeItem.textContent;
       document.getElementById('catDropdown').classList.remove('open');
       render();
     }
@@ -1287,8 +1288,7 @@
       currentLanguage = lang;
       document.querySelectorAll('#langDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.lang === lang));
       const activeItem = document.querySelector('#langDropdown .dropdown-item.active');
-      const btn = document.querySelector('#langDropdown > .tool-item');
-      btn.firstChild.textContent = lang === 'all' ? 'Language' : activeItem.textContent;
+      document.getElementById('langLabel').textContent = lang === 'all' ? 'Language' : activeItem.textContent;
       document.getElementById('langDropdown').classList.remove('open');
       render();
     }
@@ -1355,7 +1355,6 @@
       textAlign = 'left';
       customText = '';
       document.getElementById('searchBox').value = '';
-      document.getElementById('searchBox').style.display = 'none';
       document.getElementById('customText').value = '';
       document.getElementById('customText').style.display = 'none';
       document.getElementById('sizeSlider').value = 32;
@@ -1366,6 +1365,8 @@
       document.querySelectorAll('.align-btn').forEach(b => b.classList.toggle('active', b.dataset.align === 'left'));
       document.querySelectorAll('#catDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.cat === 'all'));
       document.querySelectorAll('#langDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.lang === 'all'));
+      document.getElementById('catLabel').textContent = 'Categories';
+      document.getElementById('langLabel').textContent = 'Language';
       render();
     }
 
@@ -1450,17 +1451,22 @@
       }).join('')}</div>`;
 
       // Auto-fit: shrink font-size for previews that overflow their container
-      requestAnimationFrame(() => {
+      function autoFitPreviews() {
         document.querySelectorAll('.card-preview').forEach(el => {
           const maxH = el.clientHeight;
           let size = parseFloat(el.style.fontSize);
-          // Quick check: if scrollHeight exceeds container, scale down
           while (el.scrollHeight > maxH + 2 && size > 12) {
             size = Math.max(12, size * 0.85);
             el.style.fontSize = size + 'px';
           }
         });
-      });
+      }
+      requestAnimationFrame(autoFitPreviews);
+      // Re-check after fonts finish loading (handles async font rendering)
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => requestAnimationFrame(autoFitPreviews));
+      }
+      setTimeout(() => requestAnimationFrame(autoFitPreviews), 500);
     }
 
     // ---- Font info tooltip ----
@@ -1610,13 +1616,14 @@
       // Reset search and filters to return to default view
       searchQuery = '';
       document.getElementById('searchBox').value = '';
-      document.getElementById('searchBox').style.display = 'none';
       customText = '';
       document.getElementById('customText').value = '';
       currentFilter = 'all';
       currentProperty = 'all';
       document.querySelectorAll('#catDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.cat === 'all'));
       document.querySelectorAll('#propDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.prop === 'all'));
+      document.getElementById('catLabel').textContent = 'Categories';
+      document.getElementById('langLabel').textContent = 'Language';
       switchTab('all');
     }
 
