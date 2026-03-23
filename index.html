@@ -1043,57 +1043,33 @@
     .icon-cell.icon-selected .icon-name { color: var(--bg); opacity: 0.7; }
     .icon-cell.icon-selected .icon-glyph { color: var(--bg); }
 
-    .icon-detail {
+    .icon-ctx {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
       background: var(--bg);
-      border-top: 1px solid var(--border);
-      padding: 20px 40px;
-      display: none;
-      z-index: 100;
-      animation: slideUp 0.2s ease;
-    }
-    .icon-detail.active { display: flex; gap: 32px; align-items: center; }
-
-    @keyframes slideUp {
-      from { transform: translateY(100%); }
-      to { transform: translateY(0); }
-    }
-
-    .icon-detail-preview { font-size: 64px; line-height: 1; flex-shrink: 0; }
-    .icon-detail-info { flex: 1; min-width: 0; }
-    .icon-detail-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-    .icon-detail-meta { font-size: 12px; color: var(--text-secondary); display: flex; gap: 16px; }
-
-    .icon-detail-actions { display: flex; gap: 8px; flex-shrink: 0; }
-
-    .icon-detail-btn {
-      padding: 8px 16px;
-      font-size: 13px;
       border: 1px solid var(--border);
-      border-radius: 8px;
-      background: none;
-      color: var(--text);
-      cursor: pointer;
-      font-family: inherit;
-      transition: background 0.15s;
+      border-radius: 10px;
+      padding: 6px 0;
+      min-width: 160px;
+      z-index: 300;
+      display: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     }
-    .icon-detail-btn:hover { background: var(--hover-bg); }
+    .icon-ctx.active { display: block; }
 
-    .icon-detail-close {
-      position: absolute;
-      top: 12px;
-      right: 16px;
+    .icon-ctx-item {
+      padding: 9px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.1s;
+      color: var(--text);
+      display: block;
+      width: 100%;
       border: none;
       background: none;
-      cursor: pointer;
-      color: var(--text-secondary);
-      font-size: 18px;
-      padding: 4px;
+      text-align: left;
+      font-family: inherit;
     }
-    .icon-detail-close:hover { color: var(--text); }
+    .icon-ctx-item:hover { background: var(--hover-bg); }
 </style>
 </head>
 <body>
@@ -1273,18 +1249,10 @@
         <p>正在加载图标库...</p>
       </div>
     </div>
-    <div class="icon-detail" id="iconDetail">
-      <div class="icon-detail-preview" id="iconDetailPreview"></div>
-      <div class="icon-detail-info">
-        <div class="icon-detail-name" id="iconDetailName"></div>
-        <div class="icon-detail-meta" id="iconDetailMeta"></div>
-      </div>
-      <div class="icon-detail-actions">
-        <button class="icon-detail-btn" onclick="copyIconName()">复制名称</button>
-        <button class="icon-detail-btn" onclick="copyIconUnicode()">复制 Unicode</button>
-        <button class="icon-detail-btn" onclick="copyIconSVG()">复制 SVG</button>
-      </div>
-      <button class="icon-detail-close" onclick="closeIconDetail()">✕</button>
+    <div class="icon-ctx" id="iconCtx">
+      <button class="icon-ctx-item" onclick="copyIconName()">复制名称</button>
+      <button class="icon-ctx-item" onclick="copyIconSVG()">复制符号（矢量）</button>
+      <button class="icon-ctx-item" onclick="copyIconImage()">复制图像</button>
     </div>
   </div>
 
@@ -3102,7 +3070,7 @@
       for (const g of filtered) {
         const char = String.fromCodePoint(g.unicode);
         const hex = g.unicode.toString(16).toUpperCase().padStart(4, '0');
-        html += '<div class="icon-cell" data-unicode="' + g.unicode + '" onclick="selectIcon(' + g.unicode + ')">';
+        html += '<div class="icon-cell" data-unicode="' + g.unicode + '" data-cp="' + g.unicode + '">';
         html += '<span class="icon-glyph" style="font-family:\'' + iconFontFamily + '\';' + variationStyle + '">' + char + '</span>';
         html += '<span class="icon-name">' + (g.name || 'U+' + hex) + '</span>';
         html += '</div>';
@@ -3123,35 +3091,41 @@
       document.querySelectorAll('.icon-cell').forEach(c => c.classList.remove('icon-selected'));
       const cell = document.querySelector('.icon-cell[data-unicode="' + unicode + '"]');
       if (cell) cell.classList.add('icon-selected');
-      const char = String.fromCodePoint(unicode);
-      const hex = unicode.toString(16).toUpperCase().padStart(4, '0');
-      const variation = getIconVariationCSS();
-      const detail = document.getElementById('iconDetail');
-      const preview = document.getElementById('iconDetailPreview');
-      preview.textContent = char;
-      preview.style.fontFamily = "'" + iconFontFamily + "'";
-      preview.style.fontVariationSettings = variation;
-      document.getElementById('iconDetailName').textContent = selectedIconGlyph.name || 'Unnamed';
-      document.getElementById('iconDetailMeta').innerHTML = '<span>U+' + hex + '</span><span>Index: ' + selectedIconGlyph.index + '</span>';
-      detail.classList.add('active');
     }
 
-    function closeIconDetail() {
-      const d = document.getElementById('iconDetail');
-      if (d) d.classList.remove('active');
-      document.querySelectorAll('.icon-cell').forEach(c => c.classList.remove('icon-selected'));
-      selectedIconGlyph = null;
+    function closeIconCtx() {
+      document.getElementById('iconCtx').classList.remove('active');
     }
+
+    // Right-click context menu on icon cells
+    document.addEventListener('contextmenu', function(e) {
+      const cell = e.target.closest('.icon-cell');
+      const ctx = document.getElementById('iconCtx');
+      if (!cell || !document.getElementById('iconView').classList.contains('active')) {
+        ctx.classList.remove('active');
+        return;
+      }
+      e.preventDefault();
+      const unicode = parseInt(cell.dataset.unicode);
+      selectIcon(unicode);
+      ctx.style.left = Math.min(e.clientX, window.innerWidth - 180) + 'px';
+      ctx.style.top = Math.min(e.clientY, window.innerHeight - 120) + 'px';
+      ctx.classList.add('active');
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.icon-ctx')) closeIconCtx();
+    });
 
     function copyIconName() {
       if (!selectedIconGlyph) return;
-      navigator.clipboard.writeText(selectedIconGlyph.name || '').then(() => showToast('已复制名称'));
+      navigator.clipboard.writeText(selectedIconGlyph.name || '').then(() => { showToast('已复制名称'); closeIconCtx(); });
     }
 
     function copyIconUnicode() {
       if (!selectedIconGlyph) return;
       const hex = selectedIconGlyph.unicode.toString(16).toUpperCase().padStart(4, '0');
-      navigator.clipboard.writeText('U+' + hex).then(() => showToast('已复制 Unicode'));
+      navigator.clipboard.writeText('U+' + hex).then(() => { showToast('已复制 Unicode'); closeIconCtx(); });
     }
 
     function copyIconSVG() {
@@ -3163,7 +3137,30 @@
       const w = Math.max(bbox.x2 - bbox.x1, 1);
       const h = Math.max(bbox.y2 - bbox.y1, 1);
       const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + bbox.x1 + ' ' + (-bbox.y2) + ' ' + w + ' ' + h + '" width="' + w + '" height="' + h + '"><path d="' + pathData + '" fill="currentColor" transform="scale(1,-1)"/></svg>';
-      navigator.clipboard.writeText(svg).then(() => showToast('已复制 SVG'));
+      navigator.clipboard.writeText(svg).then(() => { showToast('已复制符号（矢量）'); closeIconCtx(); });
+    }
+
+    function copyIconImage() {
+      if (!selectedIconGlyph || !iconOTFont) return;
+      const g = selectedIconGlyph.glyph;
+      const path = g.getPath(0, 0, 512);
+      const pathData = path.toPathData(2);
+      const bbox = g.getBoundingBox();
+      const w = Math.max(bbox.x2 - bbox.x1, 1);
+      const h = Math.max(bbox.y2 - bbox.y1, 1);
+      const svgStr = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + bbox.x1 + ' ' + (-bbox.y2) + ' ' + w + ' ' + h + '" width="512" height="512"><path d="' + pathData + '" fill="black" transform="scale(1,-1)"/></svg>';
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, 512, 512);
+        canvas.toBlob(function(blob) {
+          navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(() => { showToast('已复制图像'); closeIconCtx(); });
+        }, 'image/png');
+      };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
     }
 
     // ---- Init ----
