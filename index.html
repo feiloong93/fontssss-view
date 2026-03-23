@@ -1252,8 +1252,8 @@
     <div class="icon-ctx" id="iconCtx">
       <button class="icon-ctx-item" onclick="copyIconName()">复制名称</button>
       <button class="icon-ctx-item" onclick="copyIconSymbol()">复制符号</button>
-      <button class="icon-ctx-item" onclick="copyIconSVG()">复制矢量</button>
-      <button class="icon-ctx-item" onclick="copyIconImage()">复制图像</button>
+      <button class="icon-ctx-item" onclick="copyIconSVG()">复制 SVG</button>
+      <button class="icon-ctx-item" onclick="copyIconImage()">复制 PNG</button>
     </div>
   </div>
 
@@ -3138,18 +3138,26 @@
     function getIconSVGString(size) {
       if (!selectedIconGlyph || !iconOTFont) return null;
       var g = selectedIconGlyph.glyph;
-      var unitsPerEm = iconOTFont.unitsPerEm || 1000;
-      var scale = size / unitsPerEm;
-      var ascender = iconOTFont.ascender || unitsPerEm;
-      var path = g.getPath(0, ascender * scale, size);
+      var upm = iconOTFont.unitsPerEm || 1000;
+      var asc = iconOTFont.ascender || upm * 0.8;
+      var desc = iconOTFont.descender || -(upm * 0.2);
+      var fontH = asc - desc;
+      var scale = size / fontH;
+      var advW = (g.advanceWidth || upm) * scale;
+      var path = g.getPath(0, 0, upm);
       var pathData = path.toPathData(2);
-      return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + ' ' + size + '" width="' + size + '" height="' + size + '"><path d="' + pathData + '" fill="currentColor"/></svg>';
+      var pad = upm * 0.02;
+      var vx = 0 - pad;
+      var vy = -asc - pad;
+      var vw = Math.max(g.advanceWidth || upm, upm) + pad * 2;
+      var vh = fontH + pad * 2;
+      return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vx.toFixed(1) + ' ' + vy.toFixed(1) + ' ' + vw.toFixed(1) + ' ' + vh.toFixed(1) + '" width="' + size + '" height="' + size + '"><g transform="scale(1,-1)"><path d="' + pathData + '" fill="currentColor"/></g></svg>';
     }
 
     function copyIconSVG() {
       var svg = getIconSVGString(1000);
       if (!svg) return;
-      navigator.clipboard.writeText(svg).then(() => { showToast('\u5df2\u590d\u5236\u77e2\u91cf'); closeIconCtx(); });
+      navigator.clipboard.writeText(svg).then(() => { showToast('\u5df2\u590d\u5236 SVG'); closeIconCtx(); });
     }
 
     function copyIconImage() {
@@ -3164,7 +3172,7 @@
         var c = canvas.getContext('2d');
         c.drawImage(img, 0, 0, 512, 512);
         canvas.toBlob(function(blob) {
-          navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(() => { showToast('\u5df2\u590d\u5236\u56fe\u50cf'); closeIconCtx(); });
+          navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(() => { showToast('\u5df2\u590d\u5236 PNG'); closeIconCtx(); });
         }, 'image/png');
       };
       img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
