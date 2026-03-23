@@ -871,7 +871,7 @@
     .icon-view { display: none; }
     .icon-view.active { display: flex; flex-direction: column; }
 
-    .icon-body { display: flex; min-height: calc(100vh - 270px); }
+    .icon-body { display: flex; height: calc(100vh - 270px); overflow: hidden; }
 
     .icon-sidebar {
       width: 180px;
@@ -879,9 +879,6 @@
       border-right: 1px solid var(--border);
       overflow-y: auto;
       padding: 12px 0;
-      position: sticky;
-      top: 214px;
-      height: calc(100vh - 214px);
       background: var(--bg);
     }
 
@@ -903,7 +900,7 @@
     .icon-cat-item:hover { color: var(--text); background: var(--hover-bg); }
     .icon-cat-item.active { color: var(--text); font-weight: 600; }
 
-    .icon-main { flex: 1; min-width: 0; }
+    .icon-main { flex: 1; min-width: 0; overflow-y: auto; }
 
     .icon-color-dropdown {
       position: relative;
@@ -1175,7 +1172,7 @@
       padding: 8px 4px;
     }
     .icon-cell:hover { background: var(--hover-bg); z-index: 1; }
-    .icon-cell.icon-selected { outline: 2px solid var(--text); outline-offset: -2px; z-index: 2; }
+    .icon-cell.icon-selected { background: var(--hover-bg); z-index: 2; }
 
     .icon-cell .icon-glyph { font-size: 28px; line-height: 1; }
 
