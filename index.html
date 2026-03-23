@@ -1259,21 +1259,18 @@
   <div class="icon-view" id="iconView">
     <div class="icon-toolbar">
       <div class="icon-toolbar-left">
-        <span class="icon-font-name" id="iconFontName">未加载字体</span>
+        <span class="icon-font-name" id="iconFontName">HyperOS Symbols UI</span>
         <span class="icon-font-count" id="iconFontCount"></span>
         <div style="width:1px;height:24px;background:var(--border);flex-shrink:0"></div>
         <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:var(--text-secondary);fill:none;stroke-width:2;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" class="icon-search" id="iconSearch" placeholder="搜索图标名称..." />
       </div>
-      <input type="file" id="iconFileInput" accept=".ttf,.otf,.woff,.woff2" style="display:none" />
-      <button class="icon-upload-btn" onclick="document.getElementById('iconFileInput').click()">上传字体</button>
     </div>
     <div class="icon-axes" id="iconAxes"></div>
     <div id="iconContent">
       <div class="icon-empty" id="iconEmpty">
-        <div class="icon-empty-icon">⬡</div>
-        <p>上传一个图标字体文件（TTF / OTF / WOFF）<br>即可浏览所有图标</p>
-        <button class="icon-upload-btn" onclick="document.getElementById('iconFileInput').click()">上传字体文件</button>
+        <div class="spinner"></div>
+        <p>正在加载图标库...</p>
       </div>
     </div>
     <div class="icon-detail" id="iconDetail">
@@ -2998,36 +2995,34 @@
 
 
     // ===== ICON VIEW =====
+    const ICON_FONT_URL = 'icons.ttf';
     let iconOTFont = null;
     let iconGlyphs = [];
     let iconAxesData = [];
     let iconVariationSettings = {};
     let iconSearchQuery = '';
     let selectedIconGlyph = null;
-    let iconFontFamily = null;
+    let iconFontFamily = 'HyperOSIcons';
     let iconFontBuffer = null;
 
-    document.getElementById('iconFileInput').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+    async function initIconView() {
       try {
-        const buf = await file.arrayBuffer();
+        const resp = await fetch(ICON_FONT_URL);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const buf = await resp.arrayBuffer();
         iconFontBuffer = buf;
-        loadIconFont(buf, file.name);
+        loadIconFont(buf, 'HyperOS Symbols UI');
       } catch (err) {
-        showToast('字体文件加载失败: ' + err.message);
+        document.getElementById('iconEmpty').innerHTML = '<p style="color:var(--text-secondary)">图标字体加载失败</p>';
+        console.error('Icon font load error:', err);
       }
-    });
+    }
 
     function loadIconFont(buf, fileName) {
       try {
         const font = opentype.parse(buf);
         iconOTFont = font;
-        const fontName = 'IconFont_' + Date.now();
-        iconFontFamily = fontName;
-        const blob = new Blob([buf], { type: 'font/ttf' });
-        const url = URL.createObjectURL(blob);
-        const face = new FontFace(fontName, 'url(' + url + ')');
+        const face = new FontFace(iconFontFamily, buf);
         face.load().then(f => {
           document.fonts.add(f);
           renderIconGrid();
@@ -3052,7 +3047,7 @@
           iconAxesData.forEach(a => { iconVariationSettings[a.tag] = a.default; });
         }
 
-        const displayName = (font.names.fontFamily && font.names.fontFamily.en) || fileName.replace(/\.[^.]+$/, '');
+        const displayName = (font.names.fontFamily && font.names.fontFamily.en) || fileName;
         document.getElementById('iconFontName').textContent = displayName;
         document.getElementById('iconFontCount').textContent = iconGlyphs.length + ' 个图标';
         document.getElementById('navIconCount').textContent = iconGlyphs.length;
@@ -3173,6 +3168,7 @@
 
     // ---- Init ----
     loadFonts();
+    initIconView();
     initLogo();
   </script>
 </body>
