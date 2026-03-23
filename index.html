@@ -899,57 +899,96 @@
 
     .icon-main { flex: 1; min-width: 0; }
 
-    .icon-color-group {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .icon-color-dropdown {
+      position: relative;
       flex-shrink: 0;
       margin-left: 12px;
       padding-left: 12px;
       border-left: 1px solid var(--border);
     }
 
-    .icon-color-label {
+    .icon-color-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
       font-size: 12px;
-      color: var(--text-secondary);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      cursor: pointer;
+      font-family: inherit;
       white-space: nowrap;
     }
+    .icon-color-btn:hover { border-color: var(--text-secondary); }
 
-    .icon-color-swatches {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-    }
-
-    .icon-swatch {
-      width: 18px;
-      height: 18px;
+    .icon-color-dot {
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
-      border: 1.5px solid var(--border);
-      cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s;
-      padding: 0;
-      background: none;
-      position: relative;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
     }
-    .icon-swatch:hover { transform: scale(1.15); }
-    .icon-swatch.active { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--text); }
 
-    .icon-swatch-custom {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 1.5px dashed var(--border);
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-    }
-    .icon-swatch-custom input {
+    .icon-color-menu {
       position: absolute;
-      top: -4px;
-      left: -4px;
-      width: 26px;
-      height: 26px;
+      top: 100%;
+      left: 12px;
+      margin-top: 4px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 0;
+      min-width: 150px;
+      z-index: 200;
+      display: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .icon-color-menu.open { display: block; }
+
+    .icon-color-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+      color: var(--text);
+      transition: background 0.1s;
+    }
+    .icon-color-option:hover { background: var(--hover-bg); }
+    .icon-color-option.active { font-weight: 600; }
+
+    .icon-color-option .cdot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .icon-color-custom-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      position: relative;
+      color: var(--text);
+      transition: background 0.1s;
+    }
+    .icon-color-custom-row:hover { background: var(--hover-bg); }
+    .icon-color-custom-row input[type="color"] {
+      position: absolute;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
       opacity: 0;
       cursor: pointer;
     }
@@ -3223,51 +3262,84 @@
         });
         html += '</select>';
       }
-      // Icon color presets
+      // Icon color dropdown
       var fgColors = [
         {c:'#000000',n:'黑色'},{c:'#666666',n:'灰色'},{c:'#FF3B30',n:'红色'},
         {c:'#FF9500',n:'橙色'},{c:'#007AFF',n:'蓝色'},{c:'#34C759',n:'绿色'},
         {c:'#AF52DE',n:'紫色'},{c:'#FFFFFF',n:'白色'}
       ];
-      html += '<div class="icon-color-group">';
-      html += '<span class="icon-color-label">图标</span>';
-      html += '<div class="icon-color-swatches">';
+      var fgName = '黑色';
+      fgColors.forEach(function(item) { if (item.c === iconColor) fgName = item.n; });
+      var isCustomFg = !fgColors.some(function(item) { return item.c === iconColor; });
+      if (isCustomFg) fgName = '自定义';
+
+      html += '<div class="icon-color-dropdown" id="iconFgDropdown">';
+      html += '<button class="icon-color-btn" onclick="toggleIconColorMenu(\'iconFgMenu\')">';
+      html += '<span class="icon-color-dot" style="background:' + iconColor + '"></span>';
+      html += '颜色 · ' + fgName;
+      html += '<svg viewBox="0 0 24 24" width="10" height="10" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="6 9 12 15 18 9"/></svg>';
+      html += '</button>';
+      html += '<div class="icon-color-menu" id="iconFgMenu">';
       fgColors.forEach(function(item) {
-        html += '<button class="icon-swatch' + (iconColor === item.c ? ' active' : '') + '" style="background:' + item.c + '" title="' + item.n + '" onclick="setIconColor(\'' + item.c + '\')"></button>';
+        html += '<button class="icon-color-option' + (iconColor === item.c ? ' active' : '') + '" onclick="setIconColor(\'' + item.c + '\')">';
+        html += '<span class="cdot" style="background:' + item.c + '"></span>' + item.n + '</button>';
       });
-      html += '<div class="icon-swatch-custom" title="自定义"><input type="color" value="' + iconColor + '" onchange="setIconColor(this.value)" /><div style="width:100%;height:100%;background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red);border-radius:50%"></div></div>';
+      html += '<div class="icon-color-custom-row"><span class="cdot" style="background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red)"></span>自定义<input type="color" value="' + iconColor + '" onchange="setIconColor(this.value)" /></div>';
       html += '</div></div>';
 
-      // Background color presets
+      // Background color dropdown
       var bgColors = [
         {c:'',n:'默认'},{c:'#FFFFFF',n:'白色'},{c:'#F5F5F0',n:'浅灰'},
         {c:'#1a1a1a',n:'深色'},{c:'#000000',n:'黑色'},
         {c:'#E8F5E9',n:'淡绿'},{c:'#E3F2FD',n:'淡蓝'},{c:'#FFF3E0',n:'淡橙'}
       ];
-      html += '<div class="icon-color-group">';
-      html += '<span class="icon-color-label">背景</span>';
-      html += '<div class="icon-color-swatches">';
+      var bgName = '默认';
+      bgColors.forEach(function(item) { if (item.c === iconBgColor) bgName = item.n; });
+      var isCustomBg = iconBgColor && !bgColors.some(function(item) { return item.c === iconBgColor; });
+      if (isCustomBg) bgName = '自定义';
+
+      html += '<div class="icon-color-dropdown" id="iconBgDropdown">';
+      html += '<button class="icon-color-btn" onclick="toggleIconColorMenu(\'iconBgMenu\')">';
+      html += '<span class="icon-color-dot" style="background:' + (iconBgColor || 'transparent') + '"></span>';
+      html += '背景 · ' + bgName;
+      html += '<svg viewBox="0 0 24 24" width="10" height="10" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="6 9 12 15 18 9"/></svg>';
+      html += '</button>';
+      html += '<div class="icon-color-menu" id="iconBgMenu">';
       bgColors.forEach(function(item) {
-        var isActive = iconBgColor === item.c;
-        var swatchBg = item.c || 'transparent';
-        var borderFix = (!item.c || item.c === '#FFFFFF' || item.c === '#F5F5F0') ? 'border-color:var(--border)' : 'border-color:transparent';
-        html += '<button class="icon-swatch' + (isActive ? ' active' : '') + '" style="background:' + swatchBg + ';' + borderFix + '" title="' + item.n + '" onclick="setIconBgColor(\'' + item.c + '\')"></button>';
+        var dotBg = item.c || 'transparent';
+        html += '<button class="icon-color-option' + (iconBgColor === item.c ? ' active' : '') + '" onclick="setIconBgColor(\'' + item.c + '\')">';
+        html += '<span class="cdot" style="background:' + dotBg + '"></span>' + item.n + '</button>';
       });
-      html += '<div class="icon-swatch-custom" title="自定义"><input type="color" value="' + (iconBgColor || '#ffffff') + '" onchange="setIconBgColor(this.value)" /><div style="width:100%;height:100%;background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red);border-radius:50%"></div></div>';
+      html += '<div class="icon-color-custom-row"><span class="cdot" style="background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red)"></span>自定义<input type="color" value="' + (iconBgColor || '#ffffff') + '" onchange="setIconBgColor(this.value)" /></div>';
       html += '</div></div>';
 
       container.innerHTML = html;
     }
 
+    function toggleIconColorMenu(id) {
+      var menu = document.getElementById(id);
+      var wasOpen = menu.classList.contains('open');
+      document.querySelectorAll('.icon-color-menu').forEach(function(m) { m.classList.remove('open'); });
+      if (!wasOpen) menu.classList.add('open');
+    }
+
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.icon-color-dropdown')) {
+        document.querySelectorAll('.icon-color-menu').forEach(function(m) { m.classList.remove('open'); });
+      }
+    }, true);
+
     function setIconColor(c) {
       iconColor = c;
       document.querySelectorAll('.icon-glyph').forEach(function(el) { el.style.color = c; });
+      document.querySelectorAll('.icon-color-menu').forEach(function(m) { m.classList.remove('open'); });
       renderIconAxes();
     }
 
     function setIconBgColor(c) {
       iconBgColor = c;
       document.querySelectorAll('.icon-cell').forEach(function(el) { el.style.backgroundColor = c || ''; });
+      document.querySelectorAll('.icon-color-menu').forEach(function(m) { m.classList.remove('open'); });
       renderIconAxes();
     }
 
