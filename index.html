@@ -871,7 +871,7 @@
     .icon-view { display: none; }
     .icon-view.active { display: flex; flex-direction: column; }
 
-    .icon-body { display: flex; flex: 1; min-height: 0; }
+    .icon-body { display: flex; min-height: calc(100vh - 270px); }
 
     .icon-sidebar {
       width: 180px;
@@ -1237,13 +1237,13 @@
         <span class="tab-label">MiSans</span>
         <span class="tab-count" id="navMiSansCount"></span>
       </button>
+      <button class="nav-tab" data-tab="icons" onclick="switchTab('icons')">
+        <span class="tab-label">Symbols</span>
+        <span class="tab-count" id="navIconCount"></span>
+      </button>
       <button class="nav-tab" data-tab="favorites" onclick="switchTab('favorites')">
         <span class="tab-label">♥ Favorites</span>
         <span class="tab-count" id="navFavCount">0</span>
-      </button>
-      <button class="nav-tab" data-tab="icons" onclick="switchTab('icons')">
-        <span class="tab-label">Icons</span>
-        <span class="tab-count" id="navIconCount"></span>
       </button>
       <button class="nav-tab" id="addFolderBtn" onclick="addFontFolder()" title="添加本地字体文件夹" style="min-width:60px;font-size:20px;font-weight:300;color:var(--text-secondary)">
         <span class="tab-label">+</span>
