@@ -5,12 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fontssss View — Local Font Preview</title>
   <link rel="icon" type="image/svg+xml" href="Fontssss.svg">
-  <link rel="apple-touch-icon" href="Fontssss.svg">
-  <meta property="og:title" content="Fontssss View">
-  <meta property="og:description" content="本地字体预览 & 图标库浏览工具">
-  <meta property="og:image" content="https://feiloong93.github.io/fontssss-view/og-image.png">
-  <meta property="og:url" content="https://feiloong93.github.io/fontssss-view/">
-  <meta property="og:type" content="website">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -454,7 +448,6 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
       gap: 0;
-      --preview-size: 32px;
     }
 
     /* ===== CARD ===== */
@@ -870,148 +863,7 @@
 
     /* ===== ICON VIEW ===== */
     .icon-view { display: none; }
-    .icon-view.active { display: flex; flex-direction: column; }
-
-    .icon-body { display: flex; height: calc(100vh - 270px); overflow: hidden; }
-
-    .icon-sidebar {
-      width: 180px;
-      flex-shrink: 0;
-      border-right: 1px solid var(--border);
-      overflow-y: auto;
-      padding: 12px 0;
-      background: var(--bg);
-    }
-
-    .icon-cat-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 40px;
-      font-size: 13px;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: all 0.15s;
-      border: none;
-      background: none;
-      width: 100%;
-      text-align: left;
-      font-family: inherit;
-    }
-    .icon-cat-item:hover { color: var(--text); background: var(--hover-bg); }
-    .icon-cat-item.active { color: var(--text); font-weight: 600; }
-
-    .icon-main { flex: 1; min-width: 0; overflow-y: auto; }
-
-    .icon-color-dropdown {
-      position: relative;
-      flex-shrink: 0;
-      margin-left: 12px;
-    }
-
-    .icon-color-btn {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 8px;
-      font-size: 12px;
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: transparent;
-      cursor: pointer;
-      font-family: inherit;
-      white-space: nowrap;
-    }
-    .icon-color-btn:hover { border-color: var(--text-secondary); }
-
-    .icon-color-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    .icon-color-menu {
-      position: absolute;
-      top: 100%;
-      left: 12px;
-      margin-top: 4px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 6px 0;
-      min-width: 150px;
-      z-index: 200;
-      display: none;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    }
-    .icon-color-menu.open { display: block; }
-
-    .icon-color-option {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 7px 14px;
-      font-size: 13px;
-      cursor: pointer;
-      border: none;
-      background: none;
-      width: 100%;
-      text-align: left;
-      font-family: inherit;
-      color: var(--text);
-      transition: background 0.1s;
-    }
-    .icon-color-option:hover { background: var(--hover-bg); }
-    .icon-color-option.active { font-weight: 600; }
-
-    .icon-color-option .cdot {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    .icon-color-custom-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 7px 14px;
-      font-size: 13px;
-      cursor: pointer;
-      position: relative;
-      color: var(--text);
-      transition: background 0.1s;
-    }
-    .icon-color-custom-row:hover { background: var(--hover-bg); }
-    .icon-color-custom-row input[type="color"] {
-      position: absolute;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    .icon-weight-select {
-      font-size: 12px;
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 4px 24px 4px 8px;
-      background: transparent;
-      font-family: inherit;
-      cursor: pointer;
-      outline: none;
-      -webkit-appearance: none;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 6px center;
-      margin-left: auto;
-    }
+    .icon-view.active { display: block; }
 
     .icon-toolbar {
       display: flex;
@@ -1024,11 +876,15 @@
       top: 150px;
       background: rgba(245, 245, 240, 0.8);
       -webkit-backdrop-filter: blur(20px);
-      backdrop-filter: blur(20px);
-      z-index: 90;
-    }
-    body.dark .icon-toolbar {
-      background: rgba(26, 26, 26, 0.8);
+      <button class="nav-tab" data-tab="favorites" onclick="switchTab('favorites')">
+        <span class="tab-label">♥ Favorites</span>
+        <span class="tab-count" id="navFavCount">0</span>
+    .icon-cat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 40px 8px 40px;
+      font-size: 13px;(26, 26, 26, 0.8);
     }
 
     .icon-toolbar-left {
@@ -1086,7 +942,7 @@
       padding: 0 40px;
       min-height: 56px;
       border-bottom: 1px solid var(--border);
-      overflow: visible;
+      overflow-x: auto;
       position: sticky;
       top: 214px;
       background: rgba(245, 245, 240, 0.8);
@@ -1147,13 +1003,59 @@
       color: var(--text-secondary);
     }
 
-    .icon-empty-icon { font-size: 48px; opacity: 0.3; }
-    .icon-empty p { font-size: 15px; text-align: center; line-height: 1.6; }
+    .icon-empty-icon {
+      font-size: 48px;
+      opacity: 0.3;
+    }
 
-    .icon-grid {
+    .icon-empty p {
+      font-size: 15px;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+  <!-- GLYPH DETAIL OVERLAY (removed - using left metrics panel instead) -->
+
+  <!-- ICON VIEW -->
+  <div class="icon-view" id="iconView">
+    <div class="icon-toolbar">
+      <div class="icon-toolbar-left">
+        <span class="icon-font-name" id="iconFontName">未加载字体</span>
+        <span class="icon-font-count" id="iconFontCount"></span>
+        <div style="width:1px;height:24px;background:var(--border);flex-shrink:0"></div>
+        <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:var(--text-secondary);fill:none;stroke-width:2;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="icon-search" id="iconSearch" placeholder="搜索图标名称..." />
+      </div>
+      <input type="file" id="iconFileInput" accept=".ttf,.otf,.woff,.woff2" style="display:none" />
+      <button class="icon-upload-btn" onclick="document.getElementById('iconFileInput').click()">上传字体</button>
+    </div>
+    <div class="icon-axes" id="iconAxes"></div>
+    <div id="iconContent">
+      <div class="icon-empty" id="iconEmpty">
+        <div class="icon-empty-icon">⬡</div>
+        <p>上传一个图标字体文件（TTF / OTF / WOFF）<br>即可浏览所有图标</p>
+        <button class="icon-upload-btn" onclick="document.getElementById('iconFileInput').click()">上传字体文件</button>
+      </div>
+    </div>
+    <!-- Icon detail panel -->
+    <div class="icon-detail" id="iconDetail">
+      <div class="icon-detail-preview" id="iconDetailPreview"></div>
+      <div class="icon-detail-info">
+        <div class="icon-detail-name" id="iconDetailName"></div>
+        <div class="icon-detail-meta" id="iconDetailMeta"></div>
+      </div>
+      <div class="icon-detail-actions">
+        <button class="icon-detail-btn" onclick="copyIconName()">复制名称</button>
+        <button class="icon-detail-btn" onclick="copyIconUnicode()">复制 Unicode</button>
+        <button class="icon-detail-btn" onclick="copyIconSVG()">复制 SVG</button>
+      </div>
+      <button class="icon-detail-close" onclick="closeIconDetail()">✕</button>
+    </div>
+  </div>
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
       gap: 0;
+      padding: 0;
     }
 
     .icon-cell {
@@ -1170,16 +1072,26 @@
       gap: 6px;
       padding: 8px 4px;
     }
-    .icon-cell:hover { background: var(--hover-bg); z-index: 1; }
-    .icon-cell.icon-selected { background: var(--hover-bg); z-index: 2; }
-
-    .icon-cell .icon-glyph { font-size: 28px; line-height: 1; }
-
-    .icon-cell .icon-name {
-      font-size: 9px;
-      color: var(--text-secondary);
-      text-align: center;
-      max-width: 100%;
+    .icon-cell:hover {
+      background: var(--hover-bg);
+      z-index: 1;
+    }
+    .icon-cell.icon-selected {
+    .icon-axes {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0 40px;
+      min-height: 56px;
+      border-bottom: 1px solid var(--border);
+      overflow: visible;
+      position: sticky;
+      top: 214px;
+      background: rgba(245, 245, 240, 0.8);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      z-index: 89;
+    } max-width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -1188,35 +1100,84 @@
       transition: opacity 0.15s;
     }
     .icon-cell:hover .icon-name { opacity: 1; }
-    .icon-cell.icon-selected .icon-name { opacity: 1; }
+    .icon-cell.icon-selected .icon-name { color: var(--bg); opacity: 0.7; }
+    .icon-cell.icon-selected .icon-glyph { color: var(--bg); }
 
-    .icon-ctx {
+    /* Icon detail panel */
+    .icon-detail {
       position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
       background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 6px 0;
-      min-width: 160px;
-      z-index: 300;
+      border-top: 1px solid var(--border);
+      padding: 20px 40px;
       display: none;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      z-index: 100;
+      animation: slideUp 0.2s ease;
     }
-    .icon-ctx.active { display: block; }
+    .icon-detail.active { display: flex; gap: 32px; align-items: center; }
 
-    .icon-ctx-item {
-      padding: 9px 16px;
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .icon-detail-preview {
+      font-size: 64px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .icon-detail-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .icon-detail-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .icon-detail-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 16px;
+    }
+
+    .icon-detail-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .icon-detail-btn {
+      padding: 8px 16px;
       font-size: 13px;
-      cursor: pointer;
-      transition: background 0.1s;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: none;
       color: var(--text);
-      display: block;
-      width: 100%;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .icon-detail-btn:hover { background: var(--hover-bg); }
+
+    .icon-detail-close {
+      position: absolute;
+      top: 12px;
+      right: 16px;
       border: none;
       background: none;
-      text-align: left;
-      font-family: inherit;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 18px;
+      padding: 4px;
     }
-    .icon-ctx-item:hover { background: var(--hover-bg); }
+    .icon-detail-close:hover { color: var(--text); }
 </style>
 </head>
 <body>
@@ -1232,10 +1193,6 @@
       <button class="nav-tab" data-tab="misans" onclick="switchTab('misans')">
         <span class="tab-label">MiSans</span>
         <span class="tab-count" id="navMiSansCount"></span>
-      </button>
-      <button class="nav-tab" data-tab="icons" onclick="switchTab('icons')">
-        <span class="tab-label">Symbols</span>
-        <span class="tab-count" id="navIconCount"></span>
       </button>
       <button class="nav-tab" data-tab="favorites" onclick="switchTab('favorites')">
         <span class="tab-label">♥ Favorites</span>
@@ -1259,13 +1216,15 @@
         </button>
         <input type="text" class="tool-search" id="searchBox" placeholder="Type to search..." style="flex:1" />
       </div>
+        <input type="text" class="tool-search" id="searchBox" placeholder="Type to search..." style="flex:1" />
+      </div>
 
       <div class="tool-divider"></div>
 
       <!-- Categories dropdown -->
       <div class="dropdown" id="catDropdown">
         <button class="tool-item" onclick="toggleDropdown('catDropdown')">
-          <span id="catLabel">Categories</span>
+          <span id="catLabel"></span>Categories</span>
           <svg viewBox="0 0 24 24" width="10" height="10"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="dropdown-menu">
@@ -1277,8 +1236,8 @@
         </div>
       </div>
 
-      <div class="tool-separator"></div>
-
+        <button class="tool-item" onclick="toggleDropdown('langDropdown')">
+          <span id="langLabel">Language</span>
       <!-- Language dropdown -->
       <div class="dropdown" id="langDropdown">
         <button class="tool-item" onclick="toggleDropdown('langDropdown')">
@@ -1377,37 +1336,6 @@
 
   <!-- GLYPH DETAIL OVERLAY (removed - using left metrics panel instead) -->
 
-  
-  <!-- ICON VIEW -->
-  <div class="icon-view" id="iconView">
-    <div class="icon-toolbar">
-      <div class="icon-toolbar-left">
-        <span class="icon-font-name" id="iconFontName">HyperOS Symbols UI</span>
-        <div style="width:1px;height:24px;background:var(--border);flex-shrink:0"></div>
-        <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:var(--text-secondary);fill:none;stroke-width:2;flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" class="icon-search" id="iconSearch" placeholder="搜索图标名称..." />
-      </div>
-    </div>
-    <div class="icon-axes" id="iconAxes"></div>
-    <div class="icon-body">
-      <div class="icon-sidebar" id="iconSidebar"></div>
-      <div class="icon-main">
-        <div id="iconContent">
-          <div class="icon-empty" id="iconEmpty">
-            <div class="spinner"></div>
-            <p>正在加载图标库...</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="icon-ctx" id="iconCtx">
-      <button class="icon-ctx-item" onclick="copyIconName()">复制名称</button>
-      <button class="icon-ctx-item" onclick="copyIconSymbol()">复制符号</button>
-      <button class="icon-ctx-item" onclick="copyIconSVG()">复制 SVG</button>
-      <button class="icon-ctx-item" onclick="copyIconImage()">复制 PNG</button>
-    </div>
-  </div>
-
   <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
   <script>
     // ---- State ----
@@ -1442,16 +1370,30 @@
         favorites.add(family);
       }
       saveFavorites();
-      render();
-    }
-
-    const EXCERPTS = [
-      'The quick brown fox jumps over the lazy dog',
-      'Pack my box with five dozen liquor jugs',
-      'How vexingly quick daft zebras jump',
-      'Sphinx of black quartz judge my vow',
-      'Two driven jocks help fax my big quiz',
-      'Bright vixens jump dozy fowl quack',
+    // ---- Tab switch ----
+    function switchTab(tab) {
+      // If in glyph view, exit first
+      if (document.getElementById('glyphView').classList.contains('active')) {
+        hideGlyphView();
+      }
+      // Toggle icon view
+      const iconView = document.getElementById('iconView');
+      const app = document.getElementById('app');
+      const toolbar = document.querySelector('.toolbar');
+      if (tab === 'icons') {
+        app.style.display = 'none';
+        toolbar.style.display = 'none';
+        iconView.classList.add('active');
+      } else {
+        iconView.classList.remove('active');
+        app.style.display = '';
+        toolbar.style.display = '';
+        closeIconDetail();
+      }
+      currentTab = tab;
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      if (tab !== 'icons') render();
+    } 'Bright vixens jump dozy fowl quack',
       'Jackdaws love my big sphinx of quartz',
       'Grumpy wizards make toxic brew for the evil queen',
       'Few quips galvanized the mock jury box',
@@ -1741,7 +1683,7 @@
     function resetAll() {
       currentFilter = 'all';
       currentLanguage = 'all';
-      searchQuery = '';
+        closeIconCtx();
       fontSize = 32;
       previewMode = 'names';
       textAlign = 'left';
@@ -1757,33 +1699,20 @@
       document.querySelectorAll('.align-btn').forEach(b => b.classList.toggle('active', b.dataset.align === 'left'));
       document.querySelectorAll('#catDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.cat === 'all'));
       document.querySelectorAll('#langDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.lang === 'all'));
+      document.querySelectorAll('#catDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.cat === 'all'));
+      document.querySelectorAll('#langDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.lang === 'all'));
       document.getElementById('catLabel').textContent = 'Categories';
       document.getElementById('langLabel').textContent = 'Language';
       render();
-    }
-
     // ---- Tab switch ----
     function switchTab(tab) {
       // If in glyph view, exit first
       if (document.getElementById('glyphView').classList.contains('active')) {
         hideGlyphView();
       }
-      const iconView = document.getElementById('iconView');
-      const app = document.getElementById('app');
-      const toolbar = document.querySelector('.toolbar');
-      if (tab === 'icons') {
-        app.style.display = 'none';
-        toolbar.style.display = 'none';
-        iconView.classList.add('active');
-      } else {
-        iconView.classList.remove('active');
-        app.style.display = '';
-        toolbar.style.display = '';
-        closeIconCtx();
-      }
       currentTab = tab;
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-      if (tab !== 'icons') render();
+      render();
     }
 
     // ---- Render ----
@@ -1826,7 +1755,7 @@
         return;
       }
 
-      app.innerHTML = `<div class="grid" style="--preview-size:${fontSize}px">${fonts.map((f, i) => {
+      app.innerHTML = `<div class="grid">${fonts.map((f, i) => {
         const isFav = favorites.has(f.family);
         const escapedFamily = f.family.replace(/'/g, "\\'");
         return `
@@ -1838,7 +1767,7 @@
             <svg viewBox="0 0 120 120" width="16" height="16"><path d="M89.5 111.1C80.4 116.5 70.4 119.1 59.6 119.1C48.8 119.1 38.9 116.5 29.8 111.1C20.7 105.8 13.4 98.6 8.1 89.5C2.7 80.4 0 70.4 0 59.6C0 48.8 2.7 38.9 8.1 29.8C13.4 20.7 20.7 13.4 29.8 8.1C38.9 2.7 48.8 0 59.6 0C70.4 0 80.4 2.7 89.5 8.1C98.6 13.4 105.8 20.7 111.1 29.8C116.5 38.9 119.1 48.8 119.1 59.6C119.1 70.4 116.5 80.4 111.1 89.5C105.8 98.6 98.6 105.8 89.5 111.1ZM34.7 102.6C42.3 107 50.6 109.2 59.6 109.2C68.6 109.2 76.8 107 84.4 102.6C92 98.1 98 92.1 102.5 84.6C107 77 109.2 68.7 109.2 59.6C109.2 50.6 107 42.3 102.5 34.8C98 27.1 92 21.1 84.4 16.7C76.8 12.3 68.6 10 59.6 10C50.6 10 42.3 12.3 34.7 16.7C27.1 21.1 21.1 27.1 16.7 34.8C12.3 42.3 10 50.6 10 59.6C10 68.7 12.3 77 16.7 84.6C21.1 92.1 27.1 98.1 34.7 102.6ZM64.1 36.6C62.8 37.9 61.3 38.5 59.6 38.5C57.9 38.5 56.4 37.9 55.1 36.6C53.8 35.3 53.2 33.8 53.2 32.1C53.2 30.4 53.8 28.9 55.1 27.7C56.3 26.4 57.8 25.8 59.6 25.8C61.4 25.8 62.9 26.4 64.1 27.7C65.3 28.8 65.9 30.3 65.9 32.1C65.9 33.9 65.3 35.4 64.1 36.6ZM63.6 92.5C63.1 93.1 62.3 93.4 61.3 93.4H58C57 93.4 56.2 93.1 55.5 92.5C54.9 92 54.6 91.2 54.6 90.2V48.3C54.6 47.5 54.9 46.7 55.4 46.1C56.1 45.5 56.9 45.2 57.9 45.2H61.1C62.3 45.2 63.2 45.5 63.7 46.1C64.3 46.6 64.5 47.4 64.5 48.3V90.2C64.5 91.2 64.2 92 63.6 92.5Z" fill="currentColor"/></svg>
           </button>
           <div class="font-tooltip" id="tt-${i}"><div class="tt-loading">Loading...</div></div>
-          <div class="card-preview align-${textAlign}" style="font-family:'${f.family}',sans-serif;font-size:var(--preview-size)">
+          <div class="card-preview align-${textAlign}" style="font-family:'${f.family}',sans-serif;font-size:${fontSize}px">
             ${getPreviewText(f, i)}
           </div>
           <div class="card-info">
@@ -1854,7 +1783,6 @@
           </div>
         </div>`;
       }).join('')}</div>`;
-
       // Auto-fit: shrink font-size for previews that overflow their container
       function autoFitPreviews() {
         document.querySelectorAll('.card-preview').forEach(el => {
@@ -1872,6 +1800,11 @@
         document.fonts.ready.then(() => requestAnimationFrame(autoFitPreviews));
       }
       setTimeout(() => requestAnimationFrame(autoFitPreviews), 500);
+    } // Re-check after fonts finish loading (handles async font rendering like ALLMiSerif)
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => requestAnimationFrame(autoFitPreviews));
+      });
+      });
     }
 
     // ---- Font info tooltip ----
@@ -2018,17 +1951,15 @@
       if (document.getElementById('glyphView').classList.contains('active')) {
         hideGlyphView();
       }
-      // Reset search and filters to return to default view
       searchQuery = '';
       document.getElementById('searchBox').value = '';
+      customText = '';entById('searchBox').style.display = 'none';
       customText = '';
       document.getElementById('customText').value = '';
       currentFilter = 'all';
       currentProperty = 'all';
       document.querySelectorAll('#catDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.cat === 'all'));
       document.querySelectorAll('#propDropdown .dropdown-item').forEach(i => i.classList.toggle('active', i.dataset.prop === 'all'));
-      document.getElementById('catLabel').textContent = 'Categories';
-      document.getElementById('langLabel').textContent = 'Language';
       switchTab('all');
     }
 
@@ -2709,8 +2640,8 @@
         // Fallback: show button to request permission
         app.innerHTML = `
           <div class="unsupported">
-            <h2>加载本地字体</h2>
-            <p style="margin-bottom:24px">点击下方按钮授权读取本地字体</p>
+            <h2>Load Your Local Fonts</h2>
+            <p style="margin-bottom:24px">Click the button below to grant font access permission.</p>
             <button class="pick-btn" id="grantBtn">🔤 Load Local Fonts</button>
             <p style="margin-top:16px;font-size:13px;color:var(--text-secondary)">
               Or <a href="#" id="folderFallback" style="color:var(--text);text-decoration:underline">choose a font folder</a> manually
@@ -2777,11 +2708,211 @@
     function showPickerUI() {
       document.getElementById('app').innerHTML = `
         <div class="unsupported">
-          <h2>选择字体文件夹</h2>
-          <p style="margin-bottom:24px">当前浏览器不支持自动读取本地字体，请手动选择字体文件夹。</p>
-          <button class="pick-btn" onclick="pickFolder()">📁 选择文件夹</button>
-          <p style="margin-top:16px;font-size:13px;color:var(--text-secondary)">macOS 字体通常在 <code>/Library/Fonts</code> 或 <code>~/Library/Fonts</code></p>
-          <p style="margin-top:8px;font-size:13px;color:var(--text-secondary)">提示：使用 Chrome 打开可自动加载系统已安装字体</p>
+    // ===== ICON VIEW =====
+    let iconOTFont = null;
+    let iconGlyphs = [];
+    let iconAxesData = [];
+    let iconVariationSettings = {};
+    let iconSearchQuery = '';
+    let selectedIconGlyph = null;
+    let iconFontFamily = null;
+    let iconFontBuffer = null;
+
+    function showIconView() {
+      switchTab('icons');
+    }
+
+    document.getElementById('iconFileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const buf = await file.arrayBuffer();
+        iconFontBuffer = buf;
+        loadIconFont(buf, file.name);
+      } catch (err) {
+        showToast('字体文件加载失败: ' + err.message);
+      }
+    });
+
+    function loadIconFont(buf, fileName) {
+      try {
+        const font = opentype.parse(buf);
+        iconOTFont = font;
+
+        // Register as CSS font
+        const fontName = 'IconFont_' + Date.now();
+        iconFontFamily = fontName;
+        const blob = new Blob([buf], { type: 'font/ttf' });
+        const url = URL.createObjectURL(blob);
+        const face = new FontFace(fontName, `url(${url})`);
+        face.load().then(f => {
+          document.fonts.add(f);
+          renderIconGrid();
+        });
+
+        // Extract glyph data
+        iconGlyphs = [];
+        for (let i = 0; i < font.glyphs.length; i++) {
+          const g = font.glyphs.get(i);
+          if (!g.unicode && !g.unicodes.length) continue;
+          const cp = g.unicode || g.unicodes[0];
+          iconGlyphs.push({
+            index: i,
+            name: g.name || '',
+            unicode: cp,
+            glyph: g
+          });
+        }
+
+        // Extract variable font axes
+        iconAxesData = [];
+        iconVariationSettings = {};
+        if (font.tables.fvar && font.tables.fvar.axes) {
+          iconAxesData = font.tables.fvar.axes.map(a => ({
+            tag: a.tag,
+            name: a.name && a.name.en ? a.name.en : a.tag,
+            min: a.minValue,
+            max: a.maxValue,
+            default: a.defaultValue
+          }));
+          iconAxesData.forEach(a => {
+            iconVariationSettings[a.tag] = a.default;
+          });
+        }
+
+        // Update UI
+        const displayName = (font.names.fontFamily && font.names.fontFamily.en) || fileName.replace(/\.[^.]+$/, '');
+        document.getElementById('iconFontName').textContent = displayName;
+        document.getElementById('iconFontCount').textContent = iconGlyphs.length + ' 个图标';
+        document.getElementById('navIconCount').textContent = iconGlyphs.length;
+        document.getElementById('iconEmpty').style.display = 'none';
+
+        renderIconAxes();
+        renderIconGrid();
+      } catch (err) {
+        showToast('解析字体失败: ' + err.message);
+      }
+    }
+
+    function renderIconAxes() {
+      const container = document.getElementById('iconAxes');
+      if (!iconAxesData.length) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = iconAxesData.map(a => `
+        <div class="icon-axis-control">
+          <span class="icon-axis-label">${a.name}</span>
+          <input type="range" class="icon-axis-slider" min="${a.min}" max="${a.max}" value="${a.default}" step="${(a.max - a.min) > 10 ? 1 : 0.01}" data-tag="${a.tag}" oninput="updateIconAxis(this)" />
+          <span class="icon-axis-value" id="iconAxisVal_${a.tag}">${Math.round(a.default)}</span>
+        </div>
+      `).join('');
+    }
+
+    function updateIconAxis(slider) {
+      const tag = slider.dataset.tag;
+      const val = parseFloat(slider.value);
+      iconVariationSettings[tag] = val;
+      document.getElementById('iconAxisVal_' + tag).textContent = Math.round(val);
+      applyIconVariation();
+    }
+
+    function getIconVariationCSS() {
+      if (!iconAxesData.length) return '';
+      return Object.entries(iconVariationSettings).map(([k, v]) => `'${k}' ${v}`).join(', ');
+    }
+
+    function applyIconVariation() {
+      const variation = getIconVariationCSS();
+      document.querySelectorAll('.icon-glyph').forEach(el => {
+        el.style.fontVariationSettings = variation;
+      });
+      // Update detail preview if open
+      const preview = document.getElementById('iconDetailPreview');
+      if (preview) preview.style.fontVariationSettings = variation;
+    }
+
+    function renderIconGrid() {
+      if (!iconGlyphs.length) return;
+      const q = iconSearchQuery.toLowerCase();
+      const filtered = q ? iconGlyphs.filter(g => g.name.toLowerCase().includes(q) || ('U+' + g.unicode.toString(16).toUpperCase()).toLowerCase().includes(q)) : iconGlyphs;
+
+      const variation = getIconVariationCSS();
+      const variationStyle = variation ? `font-variation-settings:${variation};` : '';
+
+      const content = document.getElementById('iconContent');
+      content.innerHTML = `<div class="icon-grid">${filtered.map(g => {
+        const char = String.fromCodePoint(g.unicode);
+        const hex = g.unicode.toString(16).toUpperCase().padStart(4, '0');
+        return `<div class="icon-cell" data-unicode="${g.unicode}" onclick="selectIcon(${g.unicode})">
+          <span class="icon-glyph" style="font-family:'${iconFontFamily}';${variationStyle}">${char}</span>
+          <span class="icon-name">${g.name || 'U+' + hex}</span>
+        </div>`;
+      }).join('')}</div>`;
+
+      document.getElementById('iconFontCount').textContent = filtered.length + ' 个图标' + (q ? ` (共 ${iconGlyphs.length})` : '');
+    }
+
+    document.getElementById('iconSearch').addEventListener('input', (e) => {
+      iconSearchQuery = e.target.value;
+      renderIconGrid();
+    });
+
+    function selectIcon(unicode) {
+      selectedIconGlyph = iconGlyphs.find(g => g.unicode === unicode);
+      if (!selectedIconGlyph) return;
+
+      // Highlight cell
+      document.querySelectorAll('.icon-cell').forEach(c => c.classList.remove('icon-selected'));
+      const cell = document.querySelector(`.icon-cell[data-unicode="${unicode}"]`);
+      if (cell) cell.classList.add('icon-selected');
+
+      const char = String.fromCodePoint(unicode);
+      const hex = unicode.toString(16).toUpperCase().padStart(4, '0');
+      const variation = getIconVariationCSS();
+
+      const detail = document.getElementById('iconDetail');
+      document.getElementById('iconDetailPreview').textContent = char;
+      document.getElementById('iconDetailPreview').style.fontFamily = `'${iconFontFamily}'`;
+      document.getElementById('iconDetailPreview').style.fontVariationSettings = variation;
+      document.getElementById('iconDetailName').textContent = selectedIconGlyph.name || 'Unnamed';
+      document.getElementById('iconDetailMeta').innerHTML = `<span>U+${hex}</span><span>Index: ${selectedIconGlyph.index}</span>`;
+      detail.classList.add('active');
+    }
+
+    function closeIconDetail() {
+      document.getElementById('iconDetail').classList.remove('active');
+      document.querySelectorAll('.icon-cell').forEach(c => c.classList.remove('icon-selected'));
+      selectedIconGlyph = null;
+    }
+
+    function copyIconName() {
+      if (!selectedIconGlyph) return;
+      navigator.clipboard.writeText(selectedIconGlyph.name || '').then(() => showToast('已复制名称'));
+    }
+
+    function copyIconUnicode() {
+      if (!selectedIconGlyph) return;
+      const hex = selectedIconGlyph.unicode.toString(16).toUpperCase().padStart(4, '0');
+      navigator.clipboard.writeText('U+' + hex).then(() => showToast('已复制 Unicode'));
+    }
+
+    function copyIconSVG() {
+      if (!selectedIconGlyph || !iconOTFont) return;
+      const g = selectedIconGlyph.glyph;
+      const path = g.getPath(0, 0, 1000);
+      const pathData = path.toPathData(2);
+      const bbox = g.getBoundingBox();
+      const w = Math.max(bbox.x2 - bbox.x1, 1);
+      const h = Math.max(bbox.y2 - bbox.y1, 1);
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${bbox.x1} ${-bbox.y2} ${w} ${h}" width="${w}" height="${h}"><path d="${pathData}" fill="currentColor" transform="scale(1,-1)"/></svg>`;
+      navigator.clipboard.writeText(svg).then(() => showToast('已复制 SVG'));
+    }
+
+    // ---- Init ----
+    loadFonts();
+    initLogo();on class="pick-btn" onclick="pickFolder()">📁 Choose Font Folder</button>
+          <p style="margin-top:16px;font-size:13px;color:var(--text-secondary)">Tip on macOS: fonts are usually in <code>/Library/Fonts</code> or <code>~/Library/Fonts</code></p>
         </div>`;
     }
 
@@ -2797,11 +2928,9 @@
           toolbarRow1.classList.remove('collapsed');
         }
       }, { passive: true });
-    }, 500);
-
     document.getElementById('searchToggle').addEventListener('click', () => {
-      const box = document.getElementById('searchBox');
-      box.style.display = box.style.display === 'none' ? 'inline-block' : 'none';
+      document.getElementById('searchBox').focus();
+    });ox.style.display = box.style.display === 'none' ? 'inline-block' : 'none';
       if (box.style.display !== 'none') box.focus();
     });
 
@@ -2830,11 +2959,6 @@
     document.getElementById('sizeSlider').addEventListener('input', (e) => {
       fontSize = parseInt(e.target.value);
       document.getElementById('sizeLabel').textContent = fontSize + 'px';
-      const grid = document.querySelector('.grid');
-      if (grid) grid.style.setProperty('--preview-size', fontSize + 'px');
-    });
-    document.getElementById('sizeSlider').addEventListener('change', (e) => {
-      fontSize = parseInt(e.target.value);
       render();
     });
 
@@ -3119,414 +3243,16 @@
     const origSetTheme = setTheme;
     setTheme = function(theme) { origSetTheme(theme); if (logoSvgReady) renderLogoSvg(); };
 
-
-    // ===== ICON VIEW =====
-    const ICON_FONT_URL = 'icons.ttf';
-    let iconOTFont = null;
-    let iconGlyphs = [];
-    let iconAxesData = [];
-    let iconVariationSettings = {};
-    let iconSearchQuery = '';
-    let selectedIconGlyph = null;
-    let iconFontFamily = 'HyperOSIcons';
-    let iconFontBuffer = null;
-    let iconCategory = 'all';
-    let iconColor = '#000000';
-    let iconBgColor = '';
-
-    const ICON_CATEGORIES = {
-      'all': '全部',
-      'action': '操作',
-      'media': '媒体',
-      'communication': '通信',
-      'file': '文件',
-      'time': '时间',
-      'navigation': '导航',
-      'editing': '编辑',
-      'social': '社交',
-      'other': '其他'
-    };
-
-    const ICON_CAT_MAP = {
-      'action': ['search','ok','close','close_2','back','add','add_circle','remove','delete','clear','refresh','reset','replace','redo','undo','sort','select_all','expand_more','expand_less','chevron_backward','chevron_forward','zoom_out','more','more_circle','menu','settings','tune','filter','rotate_left'],
-      'media': ['play','pause','volume_up','volume_off','recording','call_recording','app_recording','recording_tape','music','short_video','mini_drama','movie','screen_capture','screen_mirroring','trim','photos','album','image','background','map_album'],
-      'communication': ['phone','messages','email','send','forward','reply','reply_all','notifications','carrier','community','contacts','contacts_circle','contacts_book','remove_contact','blocklist'],
-      'file': ['file','folder','folder_fill','add_folder','move_file','convert_file','copy','paste','cut','rename','save','download','upload_cloud','import','backup','file_downloads','top_downloads','merge'],
-      'time': ['alarm','world_clock','recent','stopwatch','timer','years','months','weeks','th_1','th_2','th_3','th_4','th_5','th_6','th_7','th_8','th_9','th_10','th_11','th_12','th_13','th_14','th_15','th_16','th_17','th_18','th_19','th_20','th_21','th_22','th_23','th_24','th_25','th_26','th_27','th_28','th_29','th_30','th_31'],
-      'navigation': ['location','all','list_view','grid_view','sidebar','horizontal_split','vertical_split','layers','mind_map'],
-      'editing': ['edit','create','pin','unpin','link','scan','ai_scan','translate','read','mark_all_as_read','mark_as_read','mark_ras_unread','add_bookmark','starred','unstar','report','info','help','answer'],
-      'social': ['favorites','favorites_fill','share','store','promotions','bank_cards','coupon','child','gift','rocket','book','theme','cloud_fill','notes','notes_fill','tasks','playlist'],
-      'media_ctrl': ['mic','mic_slash','hide','show','lock','unlock','search_device','update']
-    };
-
-    function getIconCategory(name) {
-      for (var cat in ICON_CAT_MAP) {
-        if (ICON_CAT_MAP[cat].indexOf(name) !== -1) return cat;
-      }
-      return 'other';
-    }
-
-    function renderIconSidebar() {
-      var counts = {};
-      for (var cat in ICON_CATEGORIES) counts[cat] = 0;
-      iconGlyphs.forEach(function(g) {
-        var c = getIconCategory(g.name);
-        if (counts[c] !== undefined) counts[c]++;
-        counts['all']++;
-      });
-      var sb = document.getElementById('iconSidebar');
-      var html = '';
-      for (var cat in ICON_CATEGORIES) {
-        if (cat !== 'all' && cat !== 'other' && (!counts[cat] || counts[cat] === 0)) continue;
-        html += '<button class="icon-cat-item' + (iconCategory === cat ? ' active' : '') + '" data-cat="' + cat + '" onclick="setIconCategory(\'' + cat + '\')">' + ICON_CATEGORIES[cat] + ' <span style="margin-left:auto;font-size:11px;opacity:0.5">' + (counts[cat] || 0) + '</span></button>';
-      }
-      sb.innerHTML = html;
-    }
-
-    function setIconCategory(cat) {
-      iconCategory = cat;
-      document.querySelectorAll('.icon-cat-item').forEach(function(el) {
-        el.classList.toggle('active', el.dataset.cat === cat);
-      });
-      renderIconGrid();
-    }
-
-    async function initIconView() {
-      try {
-        const resp = await fetch(ICON_FONT_URL);
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const buf = await resp.arrayBuffer();
-        iconFontBuffer = buf;
-        loadIconFont(buf, 'HyperOS Symbols UI');
-      } catch (err) {
-        document.getElementById('iconEmpty').innerHTML = '<p style="color:var(--text-secondary)">图标字体加载失败</p>';
-        console.error('Icon font load error:', err);
-      }
-    }
-
-    function loadIconFont(buf, fileName) {
-      try {
-        const font = opentype.parse(buf);
-        iconOTFont = font;
-        const face = new FontFace(iconFontFamily, buf);
-        face.load().then(f => {
-          document.fonts.add(f);
-          renderIconGrid();
-        });
-
-        iconGlyphs = [];
-        for (let i = 0; i < font.glyphs.length; i++) {
-          const g = font.glyphs.get(i);
-          if (!g.unicode && !g.unicodes.length) continue;
-          const cp = g.unicode || g.unicodes[0];
-          iconGlyphs.push({ index: i, name: g.name || '', unicode: cp, glyph: g });
-        }
-
-        iconAxesData = [];
-        iconVariationSettings = {};
-        if (font.tables.fvar && font.tables.fvar.axes) {
-          iconAxesData = font.tables.fvar.axes.map(a => ({
-            tag: a.tag,
-            name: a.name && a.name.en ? a.name.en : a.tag,
-            min: a.minValue, max: a.maxValue, default: a.defaultValue
-          }));
-          iconAxesData.forEach(a => { iconVariationSettings[a.tag] = a.default; });
-        }
-
-        const displayName = (font.names.fontFamily && font.names.fontFamily.en) || fileName;
-        document.getElementById('iconFontName').textContent = displayName;
-
-        document.getElementById('navIconCount').textContent = iconGlyphs.length || '';
-        document.getElementById('iconEmpty').style.display = 'none';
-        renderIconAxes();
-        renderIconSidebar();
-        renderIconGrid();
-      } catch (err) {
-        showToast('解析字体失败: ' + err.message);
-      }
-    }
-
-    function renderIconAxes() {
-      const container = document.getElementById('iconAxes');
-      if (!iconAxesData.length) { container.innerHTML = ''; return; }
-      var html = '';
-      iconAxesData.forEach(function(a) {
-        html += '<div class="icon-axis-control">';
-        html += '<span class="icon-axis-label">' + a.name + '</span>';
-        html += '<input type="range" class="icon-axis-slider" min="' + a.min + '" max="' + a.max + '" value="' + a.default + '" step="' + ((a.max - a.min) > 10 ? 1 : 0.01) + '" data-tag="' + a.tag + '" oninput="updateIconAxis(this)" />';
-        html += '<span class="icon-axis-value" id="iconAxisVal_' + a.tag + '">' + Math.round(a.default) + '</span>';
-        html += '</div>';
-      });
-      // Add weight preset dropdown if wght axis exists
-      var wghtAxis = iconAxesData.find(function(a) { return a.tag === 'wght'; });
-      if (wghtAxis) {
-        html += '<select class="icon-weight-select" id="iconWeightSelect" onchange="setIconWeight(this.value)">';
-        var presets = [100,200,300,400,500,600,700,800,900];
-        var names = ['Thin','ExtraLight','Light','Regular','Medium','SemiBold','Bold','ExtraBold','Black'];
-        presets.forEach(function(w, i) {
-          if (w >= wghtAxis.min && w <= wghtAxis.max) {
-            html += '<option value="' + w + '"' + (w === Math.round(wghtAxis.default) ? ' selected' : '') + '>' + names[i] + ' ' + w + '</option>';
-          }
-        });
-        html += '</select>';
-      }
-      // Icon color dropdown
-      var fgColors = [
-        {c:'#000000',n:'黑色'},{c:'#666666',n:'灰色'},{c:'#FF3B30',n:'红色'},
-        {c:'#FF9500',n:'橙色'},{c:'#007AFF',n:'蓝色'},{c:'#34C759',n:'绿色'},
-        {c:'#AF52DE',n:'紫色'},{c:'#FFFFFF',n:'白色'}
-      ];
-      var fgName = '黑色';
-      fgColors.forEach(function(item) { if (item.c === iconColor) fgName = item.n; });
-      var isCustomFg = !fgColors.some(function(item) { return item.c === iconColor; });
-      if (isCustomFg) fgName = '自定义';
-
-      html += '<div class="icon-color-dropdown" id="iconFgDropdown">';
-      html += '<button class="icon-color-btn" onclick="toggleIconColorMenu(\'iconFgMenu\')">';
-      html += '<span class="icon-color-dot" style="background:' + iconColor + '"></span>';
-      html += '颜色 · ' + fgName;
-      html += '<svg viewBox="0 0 24 24" width="10" height="10" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="6 9 12 15 18 9"/></svg>';
-      html += '</button>';
-      html += '<div class="icon-color-menu" id="iconFgMenu">';
-      fgColors.forEach(function(item) {
-        html += '<button class="icon-color-option' + (iconColor === item.c ? ' active' : '') + '" onclick="setIconColor(\'' + item.c + '\')">';
-        html += '<span class="cdot" style="background:' + item.c + '"></span>' + item.n + '</button>';
-      });
-      html += '<div class="icon-color-custom-row"><span class="cdot" style="background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red)"></span>自定义<input type="color" value="' + iconColor + '" onchange="setIconColor(this.value)" /></div>';
-      html += '</div></div>';
-
-      // Background color dropdown
-      var bgColors = [
-        {c:'',n:'默认'},{c:'#FFFFFF',n:'白色'},{c:'#F5F5F0',n:'浅灰'},
-        {c:'#1a1a1a',n:'深色'},{c:'#000000',n:'黑色'},
-        {c:'#E8F5E9',n:'淡绿'},{c:'#E3F2FD',n:'淡蓝'},{c:'#FFF3E0',n:'淡橙'}
-      ];
-      var bgName = '默认';
-      bgColors.forEach(function(item) { if (item.c === iconBgColor) bgName = item.n; });
-      var isCustomBg = iconBgColor && !bgColors.some(function(item) { return item.c === iconBgColor; });
-      if (isCustomBg) bgName = '自定义';
-
-      html += '<div class="icon-color-dropdown" id="iconBgDropdown">';
-      html += '<button class="icon-color-btn" onclick="toggleIconColorMenu(\'iconBgMenu\')">';
-      html += '<span class="icon-color-dot" style="background:' + (iconBgColor || 'transparent') + '"></span>';
-      html += '背景 · ' + bgName;
-      html += '<svg viewBox="0 0 24 24" width="10" height="10" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="6 9 12 15 18 9"/></svg>';
-      html += '</button>';
-      html += '<div class="icon-color-menu" id="iconBgMenu">';
-      bgColors.forEach(function(item) {
-        var dotBg = item.c || 'transparent';
-        html += '<button class="icon-color-option' + (iconBgColor === item.c ? ' active' : '') + '" onclick="setIconBgColor(\'' + item.c + '\')">';
-        html += '<span class="cdot" style="background:' + dotBg + '"></span>' + item.n + '</button>';
-      });
-      html += '<div class="icon-color-custom-row"><span class="cdot" style="background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red)"></span>自定义<input type="color" value="' + (iconBgColor || '#ffffff') + '" onchange="setIconBgColor(this.value)" /></div>';
-      html += '</div></div>';
-
-      container.innerHTML = html;
-    }
-
-    function toggleIconColorMenu(id) {
-      var menu = document.getElementById(id);
-      var wasOpen = menu.classList.contains('open');
-      document.querySelectorAll('.icon-color-menu').forEach(function(m) { m.classList.remove('open'); });
-      if (!wasOpen) menu.classList.add('open');
-    }
-
-    document.addEventListener('click', function(e) {
-      if (!e.target.closest('.icon-color-dropdown')) {
-        document.querySelectorAll('.icon-color-menu').forEach(function(m) { m.classList.remove('open'); });
-      }
-    }, true);
-
-    function setIconColor(c) {
-      iconColor = c;
-      document.querySelectorAll('.icon-glyph').forEach(function(el) { el.style.color = c; });
-      document.querySelectorAll('.icon-color-menu').forEach(function(m) { m.classList.remove('open'); });
-      renderIconAxes();
-    }
-
-    function setIconBgColor(c) {
-      iconBgColor = c;
-      document.querySelectorAll('.icon-cell').forEach(function(el) { el.style.backgroundColor = c || ''; });
-      document.querySelectorAll('.icon-color-menu').forEach(function(m) { m.classList.remove('open'); });
-      renderIconAxes();
-    }
-
-    function setIconWeight(val) {
-      val = parseFloat(val);
-      iconVariationSettings['wght'] = val;
-      var slider = document.querySelector('.icon-axis-slider[data-tag="wght"]');
-      if (slider) slider.value = val;
-      var label = document.getElementById('iconAxisVal_wght');
-      if (label) label.textContent = Math.round(val);
-      applyIconVariation();
-    }
-
-    function updateIconAxis(slider) {
-      const tag = slider.dataset.tag;
-      const val = parseFloat(slider.value);
-      iconVariationSettings[tag] = val;
-      document.getElementById('iconAxisVal_' + tag).textContent = Math.round(val);
-      if (tag === 'wght') {
-        var sel = document.getElementById('iconWeightSelect');
-        if (sel) sel.value = Math.round(val);
-      }
-      applyIconVariation();
-    }
-
-    function getIconVariationCSS() {
-      if (!iconAxesData.length) return '';
-      return Object.entries(iconVariationSettings).map(function(e) { return "'" + e[0] + "' " + e[1]; }).join(', ');
-    }
-
-    function applyIconVariation() {
-      const variation = getIconVariationCSS();
-      document.querySelectorAll('.icon-glyph').forEach(el => { el.style.fontVariationSettings = variation; });
-      const preview = document.getElementById('iconDetailPreview');
-      if (preview) preview.style.fontVariationSettings = variation;
-    }
-
-    function renderIconGrid() {
-      if (!iconGlyphs.length) return;
-      const q = iconSearchQuery.toLowerCase();
-      var filtered = iconGlyphs;
-      if (iconCategory !== 'all') {
-        filtered = filtered.filter(function(g) { return getIconCategory(g.name) === iconCategory; });
-      }
-      if (q) {
-        filtered = filtered.filter(g => g.name.toLowerCase().includes(q) || ('U+' + g.unicode.toString(16).toUpperCase()).toLowerCase().includes(q));
-      }
-      const variation = getIconVariationCSS();
-      const variationStyle = variation ? 'font-variation-settings:' + variation + ';' : '';
-      const content = document.getElementById('iconContent');
-      let html = '<div class="icon-grid">';
-      for (const g of filtered) {
-        const char = String.fromCodePoint(g.unicode);
-        const hex = g.unicode.toString(16).toUpperCase().padStart(4, '0');
-        html += '<div class="icon-cell" data-unicode="' + g.unicode + '" data-cp="' + g.unicode + '"' + (iconBgColor ? ' style="background:' + iconBgColor + '"' : '') + '>';
-        html += '<span class="icon-glyph" style="font-family:\'' + iconFontFamily + '\';color:' + iconColor + ';' + variationStyle + '">' + char + '</span>';
-        html += '<span class="icon-name">' + (g.name || 'U+' + hex) + '</span>';
-        html += '</div>';
-      }
-      html += '</div>';
-      content.innerHTML = html;
-
-    }
-
-    document.getElementById('iconSearch').addEventListener('input', (e) => {
-      iconSearchQuery = e.target.value;
-      renderIconGrid();
-    });
-
-    function selectIcon(unicode) {
-      selectedIconGlyph = iconGlyphs.find(g => g.unicode === unicode);
-      if (!selectedIconGlyph) return;
-      document.querySelectorAll('.icon-cell').forEach(c => c.classList.remove('icon-selected'));
-      const cell = document.querySelector('.icon-cell[data-unicode="' + unicode + '"]');
-      if (cell) cell.classList.add('icon-selected');
-    }
-
-    function closeIconCtx() {
-      document.getElementById('iconCtx').classList.remove('active');
-    }
-
-    // Right-click context menu on icon cells
-    document.addEventListener('contextmenu', function(e) {
-      const cell = e.target.closest('.icon-cell');
-      const ctx = document.getElementById('iconCtx');
-      if (!cell || !document.getElementById('iconView').classList.contains('active')) {
-        ctx.classList.remove('active');
-        return;
-      }
-      e.preventDefault();
-      const unicode = parseInt(cell.dataset.unicode);
-      selectIcon(unicode);
-      ctx.style.left = Math.min(e.clientX, window.innerWidth - 180) + 'px';
-      ctx.style.top = Math.min(e.clientY, window.innerHeight - 120) + 'px';
-      ctx.classList.add('active');
-    });
-
-    document.addEventListener('click', function(e) {
-      if (!e.target.closest('.icon-ctx')) closeIconCtx();
-      // Left-click on icon cell: select it; click elsewhere: deselect
-      if (document.getElementById('iconView').classList.contains('active')) {
-        var cell = e.target.closest('.icon-cell');
-        if (cell) {
-          var unicode = parseInt(cell.dataset.unicode);
-          selectIcon(unicode);
-        } else if (!e.target.closest('.icon-ctx')) {
-          document.querySelectorAll('.icon-cell.icon-selected').forEach(function(c) { c.classList.remove('icon-selected'); });
-          selectedIconGlyph = null;
-        }
-      }
-    });
-
-    function copyIconName() {
-      if (!selectedIconGlyph) return;
-      navigator.clipboard.writeText(selectedIconGlyph.name || '').then(() => { showToast('已复制名称'); closeIconCtx(); });
-    }
-
-    function copyIconUnicode() {
-      if (!selectedIconGlyph) return;
-      const hex = selectedIconGlyph.unicode.toString(16).toUpperCase().padStart(4, '0');
-      navigator.clipboard.writeText('U+' + hex).then(() => { showToast('已复制 Unicode'); closeIconCtx(); });
-    }
-
-    function copyIconSymbol() {
-      if (!selectedIconGlyph) return;
-      const char = String.fromCodePoint(selectedIconGlyph.unicode);
-      navigator.clipboard.writeText(char).then(() => { showToast('\u5df2\u590d\u5236\u7b26\u53f7'); closeIconCtx(); });
-    }
-
-    function getIconSVGString(size) {
-      if (!selectedIconGlyph || !iconOTFont) return null;
-      var g = selectedIconGlyph.glyph;
-      var upm = iconOTFont.unitsPerEm || 1000;
-      var asc = iconOTFont.ascender || upm;
-      var desc = iconOTFont.descender || 0;
-      // Use raw glyph path at 1:1 scale (font units, Y-up coordinate system)
-      var path = g.getPath(0, 0, upm);
-      var pathData = path.toPathData(2);
-      if (!pathData || pathData.length < 2) return null;
-      // In opentype.js getPath(0,0,fontSize), y=0 is the baseline
-      // ascender goes up (negative y in screen), descender goes down (positive y)
-      // So the full em square in screen coords is from y=-ascender to y=-descender
-      var advW = g.advanceWidth || upm;
-      // Use the em square as viewBox for consistent sizing
-      var vx = 0;
-      var vy = -asc;
-      var vw = Math.max(advW, upm);
-      var vh = asc - desc;
-      return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vx + ' ' + vy + ' ' + vw + ' ' + vh + '" width="' + size + '" height="' + size + '"><path d="' + pathData + '" fill="currentColor"/></svg>';
-    }
-
-    function copyIconSVG() {
-      var svg = getIconSVGString(1000);
-      if (!svg) return;
-      navigator.clipboard.writeText(svg).then(() => { showToast('\u5df2\u590d\u5236 SVG'); closeIconCtx(); });
-    }
-
-    function copyIconImage() {
-      var svgStr = getIconSVGString(512);
-      if (!svgStr) return;
-      svgStr = svgStr.replace('currentColor', 'black');
-      var img = new Image();
-      img.onload = function() {
-        var canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
-        var c = canvas.getContext('2d');
-        c.drawImage(img, 0, 0, 512, 512);
-        canvas.toBlob(function(blob) {
-          navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]).then(() => { showToast('\u5df2\u590d\u5236 PNG'); closeIconCtx(); });
-        }, 'image/png');
-      };
-      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
-    }
-
     // ---- Init ----
     loadFonts();
-    initIconView();
     initLogo();
   </script>
+</body>
+</html>
+  </script>
+  <script data-goatcounter="https://flynn.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>  </script>
+  <script data-goatcounter="https://flynn.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
